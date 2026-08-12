@@ -113,8 +113,66 @@ nav {
     box-shadow: 0 6px 20px rgba(56, 189, 248, 0.6) !important; 
 }
 
-/* RESPONSIVIDADE GLOBAL (TELEMÓVEIS) */
+/* =========================================
+   5. RESPONSIVIDADE GLOBAL E MENU MOBILE
+   ========================================= */
+
+/* Estilo do botão Hambúrguer (Escondido no computador) */
+.menu-mobile-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--neon-blue);
+    font-size: 2.2rem; /* Tamanho ajustado para ser fácil de tocar */
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.menu-mobile-btn:hover {
+    transform: scale(1.1);
+}
+
+/* Regras ativadas apenas em ecrãs menores (Telemóveis e Tablets) */
 @media (max-width: 768px) {
-    nav { flex-direction: column; gap: 1rem; padding: 1.5rem; }
-    .nav-links { flex-wrap: wrap; justify-content: center; }
+    
+    /* 1. Corrige o alinhamento da barra superior */
+    nav {
+        flex-direction: row; /* Força o Logo e o Botão a ficarem lado a lado */
+        justify-content: space-between; /* Empurra um para cada canto */
+        padding: 1rem 5%; 
+    }
+
+    /* 2. Mostra o botão Hambúrguer */
+    .menu-mobile-btn {
+        display: block;
+    }
+
+    /* 3. Esconde os links por padrão e prepara o layout do menu de gaveta */
+    .nav-links {
+        display: none; /* Escondido até o JavaScript ativar */
+        flex-direction: column;
+        align-items: center; /* Centraliza os botões dentro do menu */
+        position: absolute;
+        top: 100%; /* Posiciona exatamente debaixo da barra de navegação */
+        left: 0;
+        width: 100%;
+        background-color: var(--panel-bg);
+        padding: 2rem 0;
+        border-bottom: 1px solid var(--primary-blue);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.8);
+    }
+
+    /* 4. A classe que o JavaScript adiciona para revelar o menu */
+    .nav-links.menu-aberto {
+        display: flex;
+    }
+
+    /* 5. Ajuste no tamanho dos botões dentro do menu de telemóvel */
+    .nav-links a {
+        width: 85%; /* Ocupa quase toda a largura do ecrã */
+        text-align: center;
+        margin-bottom: 1rem;
+        font-size: 1rem;
+        padding: 12px 20px;
+    }
 }
