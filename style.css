@@ -33,30 +33,31 @@ body {
 
 /* 3. NAVEGAÇÃO E LOGO ANIMADO */
 nav {
-    display: flex; 
-    justify-content: space-between; 
+    display: flex;
+    flex-direction: row; /* Força o alinhamento horizontal perfeito */
+    justify-content: space-between;
     align-items: center;
-    padding: 1rem 5%; 
+    padding: 1rem 5%;
     background-color: var(--glass-bg);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--glass-border); 
-    position: sticky; 
-    top: 0; 
-    z-index: 100;
+    border-bottom: 1px solid var(--glass-border);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
 
 .logo {
-    font-size: 1.8rem; 
-    font-weight: 900; 
-    color: var(--text-main); 
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: var(--text-main);
     text-decoration: none;
-    letter-spacing: 1px; 
+    letter-spacing: 1px;
     transition: all 0.3s ease;
 }
 
-.logo:hover { 
-    text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); 
+.logo:hover {
+    text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
 }
 
 @keyframes brilho-vivo {
@@ -66,64 +67,20 @@ nav {
 
 .logo span {
     background: linear-gradient(90deg, var(--primary-blue) 0%, #93c5fd 50%, var(--primary-blue) 100%);
-    background-size: 200% auto; 
+    background-size: 200% auto;
     color: transparent;
-    -webkit-background-clip: text; 
+    -webkit-background-clip: text;
     background-clip: text;
     animation: brilho-vivo 3s linear infinite;
 }
 
-/* 4. LINKS DO MENU SUPERIOR */
-.nav-links { 
-    display: flex; 
-    gap: 1.5rem; 
-    align-items: center; 
-}
-
-.nav-links a { 
-    background-color: rgba(59, 130, 246, 0.1); 
-    color: var(--neon-blue); 
-    text-decoration: none; 
-    font-weight: 600; 
-    text-transform: uppercase;
-    font-size: 0.85rem; 
-    letter-spacing: 1px; 
-    padding: 10px 20px; 
-    border-radius: 30px; 
-    border: 1px solid rgba(59, 130, 246, 0.3);
-    transition: all 0.3s ease; 
-}
-
-.nav-links a:hover, .nav-links a.active { 
-    background-color: var(--primary-blue); 
-    color: #ffffff; 
-    border-color: var(--primary-blue);
-    box-shadow: 0 0 15px rgba(56, 189, 248, 0.5); 
-    transform: translateY(-2px); 
-}
-
-.btn-login { 
-    background: linear-gradient(90deg, var(--primary-blue), #1d4ed8) !important; 
-    color: white !important; 
-    border: none !important; 
-    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4) !important; 
-}
-
-.btn-login:hover { 
-    box-shadow: 0 6px 20px rgba(56, 189, 248, 0.6) !important; 
-}
-
-/* =========================================
-   5. RESPONSIVIDADE GLOBAL E MENU MOBILE
-   ========================================= */
-
-/* Estilo do botão Hambúrguer (Escondido no computador) */
+/* 4. ESTILOS DO MENU HAMBÚRGUER (AGORA GLOBAL) */
 .menu-mobile-btn {
-    display: none;
+    display: block; /* Botão sempre visível em todos os ecrãs */
     background: none;
     border: none;
     color: var(--neon-blue);
-    font-size: 2.2rem; /* Tamanho ajustado para ser fácil de tocar */
+    font-size: 2.2rem;
     cursor: pointer;
     transition: transform 0.3s;
 }
@@ -132,47 +89,61 @@ nav {
     transform: scale(1.1);
 }
 
-/* Regras ativadas apenas em ecrãs menores (Telemóveis e Tablets) */
-@media (max-width: 768px) {
-    
-    /* 1. Corrige o alinhamento da barra superior */
-    nav {
-        flex-direction: row; /* Força o Logo e o Botão a ficarem lado a lado */
-        justify-content: space-between; /* Empurra um para cada canto */
-        padding: 1rem 5%; 
-    }
+/* 5. MENU GAVETA (LINKS ESCONDIDOS POR PADRÃO) */
+.nav-links {
+    display: none; /* Escondido até o utilizador clicar */
+    flex-direction: column;
+    align-items: center;
+    position: absolute;
+    top: 100%; /* Posiciona a gaveta exatamente debaixo da barra superior */
+    left: 0;
+    width: 100%;
+    background-color: var(--panel-bg);
+    padding: 2rem 0;
+    border-bottom: 1px solid var(--primary-blue);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.8);
+}
 
-    /* 2. Mostra o botão Hambúrguer */
-    .menu-mobile-btn {
-        display: block;
-    }
+/* A classe ativada pelo app.js para revelar o menu */
+.nav-links.menu-aberto {
+    display: flex;
+}
 
-    /* 3. Esconde os links por padrão e prepara o layout do menu de gaveta */
-    .nav-links {
-        display: none; /* Escondido até o JavaScript ativar */
-        flex-direction: column;
-        align-items: center; /* Centraliza os botões dentro do menu */
-        position: absolute;
-        top: 100%; /* Posiciona exatamente debaixo da barra de navegação */
-        left: 0;
-        width: 100%;
-        background-color: var(--panel-bg);
-        padding: 2rem 0;
-        border-bottom: 1px solid var(--primary-blue);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.8);
-    }
+/* Estilo dos botões individuais dentro da gaveta */
+.nav-links a {
+    width: 300px; /* Largura padrão para manter um aspeto elegante no computador */
+    max-width: 85%; /* Se o ecrã for menor que 300px, adapta-se perfeitamente */
+    text-align: center;
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--neon-blue);
+    text-decoration: none;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 1rem;
+    letter-spacing: 1px;
+    padding: 12px 20px;
+    margin-bottom: 1rem;
+    border-radius: 30px;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    transition: all 0.3s ease;
+}
 
-    /* 4. A classe que o JavaScript adiciona para revelar o menu */
-    .nav-links.menu-aberto {
-        display: flex;
-    }
+.nav-links a:hover, .nav-links a.active {
+    background-color: var(--primary-blue);
+    color: #ffffff;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
+    transform: translateY(-2px);
+}
 
-    /* 5. Ajuste no tamanho dos botões dentro do menu de telemóvel */
-    .nav-links a {
-        width: 85%; /* Ocupa quase toda a largura do ecrã */
-        text-align: center;
-        margin-bottom: 1rem;
-        font-size: 1rem;
-        padding: 12px 20px;
-    }
+/* Estilo dedicado ao botão de Login/Sair para destaque visual */
+.btn-login {
+    background: linear-gradient(90deg, var(--primary-blue), #1d4ed8) !important;
+    color: white !important;
+    border: none !important;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4) !important;
+}
+
+.btn-login:hover {
+    box-shadow: 0 6px 20px rgba(56, 189, 248, 0.6) !important;
 }

@@ -15,22 +15,18 @@
            ESTILOS EXCLUSIVOS DESTA PÁGINA (GRÁFICO)
            ========================================= */
         
-        /* A página de gráfico precisa ser ecrã inteiro e sem scroll na página principal */
-        body {
-            display: flex; flex-direction: column; height: 100vh; overflow: hidden;
-        }
+        body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
         /* ÁREA DE TRABALHO E PAINÉIS LATERAIS */
         .workspace { display: flex; flex-grow: 1; overflow: hidden; position: relative; }
         .sidebar-left, .sidebar-right { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; }
         .sidebar-left.escondido, .sidebar-right.escondido { width: 0; padding-left: 0; padding-right: 0; border: none; opacity: 0; }
 
-        /* Painel Esquerdo (Lista de Ativos) */
         .sidebar-left { width: 260px; background-color: var(--panel-bg); border-right: 1px solid var(--border-color); overflow-y: auto; padding: 1rem; flex-shrink: 0; }
         .sidebar-left::-webkit-scrollbar { width: 6px; }
         .sidebar-left::-webkit-scrollbar-thumb { background-color: var(--border-color); border-radius: 4px; }
         
-        .categoria h3 { font-size: 0.85rem; color: var(--text-muted); margin: 1.5rem 0 0.8rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;}
+        .categoria h3 { font-size: 0.85rem; color: var(--neon-blue); margin: 1.5rem 0 0.8rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;}
         
         .btn-ativo {
             display: flex; justify-content: space-between; align-items: center;
@@ -39,49 +35,34 @@
             border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 500;
             transition: all 0.3s ease; white-space: nowrap;
         }
-        .btn-ativo:hover { 
-            background-color: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.5);
-            color: var(--text-main); transform: translateX(5px);
-        }
-        .btn-ativo.ativo-selecionado { 
-            background: linear-gradient(90deg, rgba(59,130,246,0.3) 0%, rgba(59,130,246,0.1) 100%);
-            border-left: 4px solid var(--primary-blue); border-top: 1px solid var(--border-color);
-            border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color);
-            color: white; font-weight: bold; transform: translateX(5px);
-        }
+        .btn-ativo:hover { background-color: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.5); color: var(--text-main); transform: translateX(5px); }
+        .btn-ativo.ativo-selecionado { background: linear-gradient(90deg, rgba(59,130,246,0.3) 0%, rgba(59,130,246,0.1) 100%); border-left: 4px solid var(--primary-blue); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); color: white; font-weight: bold; transform: translateX(5px); }
 
         /* ÁREA CENTRAL: GRÁFICO E BARRA SUPERIOR */
         .chart-area { flex-grow: 1; display: flex; flex-direction: column; background-color: var(--bg-color); }
-        
-        .chart-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 8px 15px; background-color: var(--panel-bg);
-            border-bottom: 1px solid var(--border-color);
-        }
-        
+        .chart-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 15px; background-color: var(--panel-bg); border-bottom: 1px solid var(--border-color); }
         .chart-header .right-controls { display: flex; gap: 8px; }
 
-        .btn-acao {
-            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: var(--text-main);
-            width: 36px; height: 36px; border-radius: 8px; cursor: pointer;
-            font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: 0.3s;
-        }
+        .btn-acao { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: var(--text-main); width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
         .btn-acao:hover { background: var(--primary-blue); border-color: var(--primary-blue); color: white; }
 
+        .chart-title-center { flex-grow: 1; text-align: center; font-size: 1rem; font-weight: 700; color: var(--text-main); letter-spacing: 1px; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .live-dot { width: 8px; height: 8px; background-color: #10b981; border-radius: 50%; box-shadow: 0 0 8px #10b981; animation: piscar 1.5s infinite alternate; }
+        @keyframes piscar { from { opacity: 1; } to { opacity: 0.3; } }
         .chart-container { flex-grow: 1; width: 100%; height: 100%; }
 
-        /* PAINEL DIREITO: IA E NOTÍCIAS */
+        /* PAINEL DIREITO: IA, ANÁLISE E NOTÍCIAS */
         .sidebar-right { width: 320px; background-color: var(--panel-bg); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; flex-shrink: 0; }
         
+        /* Modificado para suportar 3 botões */
         .tab-selector { display: flex; border-bottom: 1px solid var(--border-color); }
-        .tab-btn { flex: 1; padding: 1rem 0; background: none; border: none; color: var(--text-muted); cursor: pointer; font-weight: 600; transition: 0.3s; border-bottom: 2px solid transparent; }
-        .tab-btn.active { color: #a78bfa; border-bottom-color: #a78bfa; }
-        .tab-btn:nth-child(2).active { color: var(--primary-blue); border-bottom-color: var(--primary-blue); }
+        .tab-btn { flex: 1; padding: 1rem 0.5rem; background: none; border: none; color: var(--text-muted); cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: 0.3s; border-bottom: 2px solid transparent; }
+        .tab-btn.active { color: var(--neon-blue); border-bottom-color: var(--primary-blue); }
         
         .panel { display: none; flex-direction: column; flex-grow: 1; overflow: hidden; }
         .panel.active-panel { display: flex; }
         
-        /* Estilos do Chat da IA */
+        /* Estilos do Chat e Notícias */
         .ai-chat-history { flex-grow: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; }
         .balao { padding: 0.8rem; border-radius: 8px; font-size: 0.9rem; line-height: 1.4; max-width: 90%; }
         .balao-ia { background-color: var(--chat-ai); align-self: flex-start; border-bottom-left-radius: 0; }
@@ -96,13 +77,13 @@
         .btn-enviar { background-color: var(--primary-blue); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         .btn-enviar:hover { background-color: var(--primary-hover); transform: scale(1.05); }
         
-        /* Estilos das Notícias na barra lateral */
         .news-header { padding: 1rem; border-bottom: 1px solid var(--border-color); font-weight: bold; color: var(--primary-blue); font-size: 0.9rem; text-align: center; }
         .news-list { padding: 1rem; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 1rem; }
         .news-item { background: var(--bg-color); border-left: 3px solid var(--primary-blue); padding: 1rem; border-radius: 0 6px 6px 0; font-size: 0.85rem; line-height: 1.5; color: var(--text-muted); }
         .news-item strong { display: block; color: var(--text-main); margin-bottom: 5px; font-size: 0.9rem; }
+        .news-link { color: var(--neon-blue); text-decoration: none; display: block; margin-top: 8px; font-weight: bold; }
+        .news-link:hover { text-decoration: underline; }
 
-        /* Responsividade para Telemóveis */
         @media (max-width: 900px) {
             .workspace { flex-direction: column; }
             .sidebar-left, .sidebar-right { width: 100%; height: auto; border-right: none; border-left: none; transition: none;}
@@ -117,79 +98,77 @@
 </head>
 <body>
     <nav>
-        <a href="astromoney_home.html" class="logo">ASTRO<span>MONEY</span></a>
-        
-        <!-- NOVO BOTÃO HAMBÚRGUER -->
+        <a href="grafico.html" class="logo">ASTRO<span>MONEY</span></a>
         <button class="menu-mobile-btn" onclick="alternarMenuMobile()">☰</button>
-        
         <div class="nav-links">
-            <a href="astromoney_home.html">Início</a>
-            <a href="grafico.html">Gráfico</a>
+            <a href="grafico.html" class="active">Gráfico</a>
             <a href="noticias.html">Notícias</a>
             <a href="forum.html">Fórum</a>
-            <a href="login.html" class="btn-login">Entrar / Registrar</a>
+            <a href="perfil.html">Perfil</a>
+            <a href="#" onclick="fazerLogout()" class="btn-login" style="background: #ef4444 !important; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4) !important;">Sair</a>
         </div>
+    </nav>
     </nav>
 
     <div class="workspace" id="area-de-trabalho-completa">
         
-        <!-- COLUNA 1: MERCADOS -->
         <aside class="sidebar-left" id="painel-mercados">
             <div class="categoria">
-                <h3>Commodities</h3>
-                <button class="btn-ativo ativo-selecionado" onclick="mudarGrafico('TVC:GOLD', this, 'Ouro (GOLD)')"><span>GOLD</span></button>
-                <button class="btn-ativo" onclick="mudarGrafico('TVC:SILVER', this, 'Prata (SILVER)')"><span>SILVER</span></button>
-                <button class="btn-ativo" onclick="mudarGrafico('TVC:USOIL', this, 'Petróleo (WTI)')"><span>WTI</span></button>
-                <button class="btn-ativo" onclick="mudarGrafico('TVC:UKOIL', this, 'Petróleo (BRENT)')"><span>BRENT</span></button>
-                <button class="btn-ativo" onclick="mudarGrafico('TVC:NATGAS', this, 'Gás Natural (NGAS)')"><span>NGAS</span></button>
+                <h3>Radar: Curto Prazo</h3>
+                <button class="btn-ativo ativo-selecionado" onclick="mudarGrafico('BINANCE:ETHUSD', this, 'Ethereum')"><span>ETHUSD</span></button>
+                <button class="btn-ativo" onclick="mudarGrafico('BINANCE:SOLUSD', this, 'Solana')"><span>SOLUSD</span></button>
+                <button class="btn-ativo" onclick="mudarGrafico('TVC:USOIL', this, 'Óleo Cru WTI')"><span>Crude Oil</span></button>
             </div>
             
             <div class="categoria">
-                <h3>Criptomoedas</h3>
-                <button class="btn-ativo" onclick="mudarGrafico('BINANCE:BTCUSD', this, 'Bitcoin (BTC)')"><span>BTCUSD</span></button>
-                <button class="btn-ativo" onclick="mudarGrafico('BINANCE:SOLUSD', this, 'Solana (SOL)')"><span>SOLUSD</span></button>
-                <button class="btn-ativo" onclick="mudarGrafico('BINANCE:ETHUSD', this, 'Ethereum (ETH)')"><span>ETHUSD</span></button>
+                <h3>Outras Criptomoedas</h3>
+                <button class="btn-ativo" onclick="mudarGrafico('BINANCE:BTCUSD', this, 'Bitcoin')"><span>BTCUSD</span></button>
+                <button class="btn-ativo" onclick="mudarGrafico('BINANCE:XRPUSD', this, 'Ripple')"><span>XRPUSD</span></button>
             </div>
 
             <div class="categoria">
-                <h3>Índices Capital</h3>
-                <button class="btn-ativo" onclick="mudarGrafico('TVC:NI225', this, 'Nikkei 225 (JP225)')"><span>JP225</span></button>
-                <button class="btn-ativo" onclick="mudarGrafico('NASDAQ:NDX', this, 'Nasdaq 100 (US100)')"><span>US100</span></button>
-                <button class="btn-ativo" onclick="mudarGrafico('SP:SPX', this, 'S&P 500 (SP500)')"><span>SP500</span></button>
-                <button class="btn-ativo" onclick="mudarGrafico('TVC:HSI', this, 'Hang Seng (HK50)')"><span>HK50</span></button>
-                <button class="btn-ativo" onclick="mudarGrafico('TVC:CHINA50', this, 'China A50 (CHN50)')"><span>CHN50</span></button>
+                <h3>Commodities Base</h3>
+                <button class="btn-ativo" onclick="mudarGrafico('TVC:GOLD', this, 'Ouro')"><span>GOLD</span></button>
+                <button class="btn-ativo" onclick="mudarGrafico('TVC:SILVER', this, 'Prata')"><span>SILVER</span></button>
+            </div>
+            
+            <div class="categoria">
+                <h3>Índices Globais</h3>
+                <button class="btn-ativo" onclick="mudarGrafico('NASDAQ:NDX', this, 'Nasdaq 100')"><span>US100</span></button>
+                <button class="btn-ativo" onclick="mudarGrafico('SP:SPX', this, 'S&P 500')"><span>SP500</span></button>
             </div>
         </aside>
 
-        <!-- COLUNA 2: TERMINAL TRADINGVIEW -->
         <main class="chart-area" id="area-do-grafico">
-            
             <div class="chart-header">
                 <button class="btn-acao" onclick="ocultarPainel('painel-mercados')" title="Mostrar/Ocultar Mercados">☰</button>
-                
+                <div class="chart-title-center" id="titulo-grafico-central">
+                    Ethereum <span class="live-dot"></span>
+                </div>
                 <div class="right-controls">
                     <button class="btn-acao" onclick="ocultarPainel('painel-direito')" title="Mostrar/Ocultar Painel IA">☰</button>
                     <button class="btn-acao" onclick="ativarTelaCheia()" title="Tela Cheia">⛶</button>
                 </div>
             </div>
-
             <div class="chart-container" id="container_do_grafico"></div>
         </main>
 
-        <!-- COLUNA 3: PAINEL DIREITO -->
         <aside class="sidebar-right" id="painel-direito">
+            <!-- NOVAS ABAS INCLUINDO A ANÁLISE -->
             <div class="tab-selector">
-                <button class="tab-btn active" onclick="trocarAba('ia', this)">✨ IA Assistant</button>
+                <button class="tab-btn active" onclick="trocarAba('ia', this)">✨ IA</button>
+                <button class="tab-btn" onclick="trocarAba('analise', this)">📊 Análise</button>
                 <button class="tab-btn" onclick="trocarAba('news', this)">📰 Notícias</button>
             </div>
             
+            <!-- PAINEL DE INTELIGÊNCIA ARTIFICIAL -->
             <div id="painel-ia" class="panel active-panel">
                 <div class="ai-chat-history" id="chat-history">
-                    <div class="balao balao-ia">Olá! Em que posso ajudar hoje?</div>
+                    <div class="balao balao-ia">Olá! O meu cérebro visual está pronto. Como posso ajudar com a sua estratégia?</div>
                 </div>
                 <div class="ai-suggestions">
-                    <button class="btn-sugestao" onclick="usarSugestao('Identifique os níveis de resistência.')">Identifique níveis de resistência.</button>
-                    <button class="btn-sugestao" onclick="usarSugestao('Resuma o cenário macroeconômico de hoje.')">Resuma o cenário de hoje.</button>
+                    <button class="btn-sugestao" onclick="usarSugestao('Quais são os suportes chave nos 15m?')">Suportes chave nos 15m?</button>
+                    <button class="btn-sugestao" onclick="usarSugestao('Resuma a volatilidade atual deste ativo.')">Resuma a volatilidade atual.</button>
                 </div>
                 <div class="ai-input-area">
                     <input type="text" id="campo-ia" class="ai-input" placeholder="Pergunte à IA..." onkeypress="verificarEnter(event)">
@@ -197,23 +176,28 @@
                 </div>
             </div>
 
+            <!-- NOVO PAINEL DE ANÁLISE -->
+            <div id="painel-analise" class="panel">
+                <div class="news-header" id="titulo-analise">Análise: Ethereum</div>
+                <div class="news-list" id="lista-analise">
+                    <!-- Gerado dinamicamente pelo JavaScript -->
+                </div>
+            </div>
+
+            <!-- PAINEL DE NOTÍCIAS (Agora Dinâmico) -->
             <div id="painel-news" class="panel">
-                <div class="news-header" id="titulo-noticias">Últimas sobre Ouro (GOLD)</div>
+                <div class="news-header" id="titulo-noticias">Últimas sobre Ethereum</div>
                 <div class="news-list" id="lista-noticias">
-                    <div class="news-item">
-                        <strong>Atualização de Mercado</strong>
-                        Análise de curto prazo indica alta volatilidade para Ouro (GOLD) nas próximas horas.
-                    </div>
+                    <div class="news-item">A pesquisar notícias na internet...</div>
                 </div>
             </div>
         </aside>
     </div>
 
-    <!-- =========================================
-         4. LÓGICA JAVASCRIPT
-         ========================================= -->
-<script src="app.js"></script>
+    <!-- LIGAÇÃO AO CÉREBRO GLOBAL JAVASCRIPT -->
+    <script src="app.js"></script>
 
+    <!-- LÓGICA DO TERMINAL -->
     <script>
         function ocultarPainel(idDoPainel) {
             let painel = document.getElementById(idDoPainel);
@@ -222,22 +206,90 @@
 
         function desenharGrafico(simbolo) {
             new TradingView.widget({
-                "autosize": true,
-                "symbol": simbolo,  
-                "interval": "60",
-                "timezone": "America/Sao_Paulo",
-                "theme": "dark",
-                "style": "1",
-                "locale": "br",
-                "enable_publishing": false,
-                "backgroundColor": "#070a13",
-                "gridColor": "#1e293b",
-                "hide_top_toolbar": false,       
-                "hide_side_toolbar": false,      
-                "allow_symbol_change": true,
-                "details": true,
+                "autosize": true, "symbol": simbolo, "interval": "15",
+                "timezone": "America/Sao_Paulo", "theme": "dark", "style": "1",
+                "locale": "br", "enable_publishing": false, "backgroundColor": "#070a13",
+                "gridColor": "#1e293b", "hide_top_toolbar": false, "hide_side_toolbar": false,      
+                "allow_symbol_change": true, "details": true, "withdateranges": true,
+                "studies": [ "RSI@tv-basicstudies", "MACD@tv-basicstudies", "Volume@tv-basicstudies" ],
                 "container_id": "container_do_grafico"
             });
+        }
+
+        // ==========================================
+        // SISTEMA DINÂMICO DE ANÁLISE E NOTÍCIAS
+        // ==========================================
+        function atualizarAnalise(nomeAtivo) {
+            document.getElementById('titulo-analise').innerText = "Análise: " + nomeAtivo;
+            const listaAnalise = document.getElementById('lista-analise');
+            
+            // Simulação de base de dados técnica para a Análise
+            const analisesBase = {
+                'Ethereum': 'Estrutura técnica aponta para forte suporte nos suportes recentes institucionais. MACD indica potencial convergência.',
+                'Solana': 'Alta volatilidade intraday. Atenção aos rompimentos das médias móveis curtas (EMA 9 e 21).',
+                'Óleo Cru WTI': 'Sensível a inventários semanais e geopolítica. RSI frequentemente toca a sobrevenda em dias de dados.',
+                'Bitcoin': 'Ativo direcional principal. Se romper a consolidação de 15m com volume, tende a arrastar o restante do mercado.',
+                'Ouro': 'Atua como proteção natural. Zonas de liquidez identificadas nos topos anteriores.'
+            };
+
+            let textoAnalise = analisesBase[nomeAtivo] || 'Ativo em fase de consolidação. Verifique a ação do preço e confirme a quebra do RSI antes de iniciar posições.';
+
+            listaAnalise.innerHTML = `
+                <div class="news-item">
+                    <strong>Estrutura de 15 Minutos</strong>
+                    ${textoAnalise}
+                </div>
+                <div class="news-item">
+                    <strong>Pontos Chave</strong>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>Confirmar Volume em quebras.</li>
+                        <li>Verificar cruzamento MACD.</li>
+                    </ul>
+                </div>
+            `;
+        }
+
+        function buscarNoticias(nomeAtivo) {
+            document.getElementById('titulo-noticias').innerText = "Últimas sobre " + nomeAtivo;
+            const caixaNoticias = document.getElementById('lista-noticias');
+            caixaNoticias.innerHTML = '<div class="news-item">A comunicar com os servidores da NewsAPI...</div>';
+
+            // 1. Coloque a sua chave aqui novamente
+            const MINHA_API_KEY = 'bc8c7a60991b4f05881c7ecacd2ee7bf'; 
+            
+            // Ocultamos símbolos como (WTI) ou (ETH) para não confundir a pesquisa da API
+            const ativoLimpo = nomeAtivo.split(' (')[0]; 
+            const termoBusca = encodeURIComponent(ativoLimpo);
+            
+            const urlAPI = `https://newsapi.org/v2/everything?q=${termoBusca}&language=pt&sortBy=publishedAt&apiKey=${MINHA_API_KEY}`;
+
+            fetch(urlAPI)
+                .then(resposta => {
+                    if (!resposta.ok) throw new Error("Erro na API");
+                    return resposta.json();
+                })
+                .then(dados => {
+                    caixaNoticias.innerHTML = ''; 
+                    if(dados.articles && dados.articles.length > 0) {
+                        
+                        let noticiasValidas = dados.articles.filter(n => n.title !== "[Removed]");
+                        
+                        noticiasValidas.slice(0, 4).forEach(noticia => {
+                            caixaNoticias.innerHTML += `
+                                <div class="news-item">
+                                    <strong>${noticia.title}</strong>
+                                    <a href="${noticia.url}" target="_blank" class="news-link">Ler notícia original ➤</a>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        caixaNoticias.innerHTML = '<div class="news-item">O mercado está calmo. Não foram encontradas notícias recentes para este ativo.</div>';
+                    }
+                })
+                .catch(erro => {
+                    console.error(erro);
+                    caixaNoticias.innerHTML = '<div class="news-item">Não foi possível ligar aos servidores. (Restrição CORS ou Chave Inválida).</div>';
+                });
         }
 
         function mudarGrafico(novoSimbolo, botaoClicado, nomeAtivo) {
@@ -247,33 +299,24 @@
             botoes.forEach(function(botao) { botao.classList.remove('ativo-selecionado'); });
             botaoClicado.classList.add('ativo-selecionado');
 
-            document.getElementById('titulo-noticias').innerText = "Últimas sobre " + nomeAtivo;
-            document.getElementById('lista-noticias').innerHTML = `
-                <div class="news-item">
-                    <strong>Alerta de Volatilidade</strong>
-                    Análise de curto prazo indica alta volatilidade para ${nomeAtivo} nas próximas sessões.
-                </div>
-                <div class="news-item">
-                    <strong>Sentimento de Mercado</strong>
-                    Investidores aguardam novos dados macroeconômicos que podem impactar a trajetória de ${nomeAtivo}.
-                </div>
-            `;
+            document.getElementById('titulo-grafico-central').innerHTML = `${nomeAtivo} <span class="live-dot"></span>`;
+
+            // Ativa o novo sistema dinâmico
+            atualizarAnalise(nomeAtivo);
+            buscarNoticias(nomeAtivo);
         }
-
-
 
         function trocarAba(abaDestino, botaoClicado) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active-panel'));
             botaoClicado.classList.add('active');
 
-            if(abaDestino === 'ia') {
-                document.getElementById('painel-ia').classList.add('active-panel');
-            } else if(abaDestino === 'news') {
-                document.getElementById('painel-news').classList.add('active-panel');
-            }
+            document.getElementById('painel-' + abaDestino).classList.add('active-panel');
         }
 
+        // ==========================================
+        // SISTEMA DE INTELIGÊNCIA ARTIFICIAL
+        // ==========================================
         const campoInput = document.getElementById('campo-ia');
         const historico = document.getElementById('chat-history');
 
@@ -288,14 +331,23 @@
             campoInput.value = ""; 
             historico.scrollTop = historico.scrollHeight;
 
+            // IMPORTANTE: Atualmente, isto é uma SIMULAÇÃO (setTimeout).
+            // Para colocar uma IA real e gratuita, teremos de apagar este bloco e usar a API do Google Gemini.
             setTimeout(() => {
-                let respostaSimulada = "ASTRO AI Processando: A avaliar dados do ativo e indicadores para '" + mensagemUser + "'...";
+                let respostaSimulada = "ASTRO AI: De momento sou um assistente visual. A minha ligação à rede neuronal Gemini será estabelecida em breve para analisar '" + mensagemUser + "'.";
                 historico.innerHTML += `<div class="balao balao-ia">${respostaSimulada}</div>`;
                 historico.scrollTop = historico.scrollHeight;
             }, 1000);
         }
 
-        window.onload = function() { desenharGrafico('TVC:GOLD'); };
+        window.onload = function() { 
+            if (typeof protegerPagina === "function") { protegerPagina(); }
+            
+            // Inicia o terminal no Ethereum e carrega as análises e notícias dele
+            desenharGrafico('BINANCE:ETHUSD'); 
+            atualizarAnalise('Ethereum');
+            buscarNoticias('Ethereum');
+        };
     </script>
 </body>
 </html>

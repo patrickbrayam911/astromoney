@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASTROMONEY - O Meu Perfil</title>
+    
+    <!-- LIGAÇÃO AO FICHEIRO CSS GLOBAL -->
+    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        /* =========================================
+           ESTILOS EXCLUSIVOS DESTA PÁGINA (PERFIL)
+           ========================================= */
+        body { display: flex; flex-direction: column; min-height: 100vh; }
+
+        .profile-container { padding: 4rem 5%; max-width: 1200px; margin: 0 auto; flex-grow: 1; width: 100%; }
+        
+        .profile-header { text-align: center; margin-bottom: 3rem; }
+        .profile-header h1 { font-size: 2.5rem; color: var(--text-main); margin-bottom: 0.5rem; }
+        .profile-header p { color: var(--text-muted); font-size: 1.1rem; }
+
+        /* A grelha adapta-se perfeitamente aos 3 cartões */
+        .profile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; }
+
+        /* Estilo dos Cartões de Informação */
+        .profile-card { 
+            background: rgba(15, 20, 35, 0.7); 
+            backdrop-filter: blur(10px); 
+            border: 1px solid var(--border-color); 
+            padding: 2rem; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .profile-card h3 { 
+            font-size: 1.3rem; 
+            color: var(--neon-blue); 
+            margin-bottom: 1.5rem; 
+            border-bottom: 1px solid var(--border-color); 
+            padding-bottom: 0.5rem; 
+        }
+
+        /* Lista de Dados Pessoais */
+        .data-list { list-style: none; padding: 0; margin-bottom: auto; }
+        .data-list li { margin-bottom: 1rem; font-size: 1rem; display: flex; flex-direction: column; }
+        .data-label { color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; margin-bottom: 4px; }
+        .data-value { color: var(--text-main); font-weight: 500; font-size: 1.1rem; }
+
+        /* Estilo das Tags de Trading */
+        .trading-tags { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: auto;}
+        .tag { 
+            background: rgba(59, 130, 246, 0.1); 
+            color: var(--text-main); 
+            border: 1px solid rgba(59, 130, 246, 0.4); 
+            padding: 8px 16px; 
+            border-radius: 20px; 
+            font-size: 0.9rem; 
+            font-weight: 600;
+        }
+
+        /* =========================================
+           NOVOS ESTILOS PARA O CARTÃO DE SEGURANÇA
+           ========================================= */
+        .form-group { margin-bottom: 1.2rem; }
+        .form-group label { display: block; margin-bottom: 0.4rem; font-size: 0.85rem; color: var(--text-muted); font-weight: 500;}
+        .form-input { 
+            width: 100%; padding: 0.8rem; border-radius: 8px; 
+            background-color: var(--bg-color); border: 1px solid var(--border-color); 
+            color: var(--text-main); outline: none; transition: 0.3s; font-size: 0.95rem; 
+        }
+        .form-input:focus { border-color: var(--primary-blue); box-shadow: 0 0 8px rgba(59, 130, 246, 0.3); }
+
+        .btn-primary { 
+            width: 100%; padding: 1rem; background-color: var(--primary-blue); 
+            color: white; border: none; border-radius: 8px; font-weight: bold; 
+            font-size: 1rem; cursor: pointer; transition: 0.3s; margin-top: auto; 
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); 
+        }
+        .btn-primary:hover { background-color: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(59, 130, 246, 0.5); }
+        
+        .msg { margin-top: 1rem; text-align: center; font-size: 0.9rem; min-height: 20px; font-weight: 500;}
+        .msg-erro { color: #f87171; } 
+        .msg-sucesso { color: #34d399; } 
+        
+        /* Botões de Ação */
+        .profile-actions { margin-top: 4rem; text-align: center; border-top: 1px solid var(--border-color); padding-top: 2rem;}
+        .btn-danger { 
+            background-color: transparent; color: #ef4444; border: 2px solid #ef4444; 
+            padding: 10px 30px; border-radius: 30px; font-weight: bold; 
+            cursor: pointer; transition: 0.3s; font-size: 1rem;
+        }
+        .btn-danger:hover { background-color: #ef4444; color: white; box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="grafico.html" class="logo">ASTRO<span>MONEY</span></a>
+        <button class="menu-mobile-btn" onclick="alternarMenuMobile()">☰</button>
+        <div class="nav-links">
+            <a href="grafico.html">Gráfico</a>
+            <a href="noticias.html">Notícias</a>
+            <a href="forum.html">Fórum</a>
+            <a href="perfil.html" class="active">Perfil</a>
+            <a href="#" onclick="fazerLogout()" class="btn-login" style="background: #ef4444 !important; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4) !important;">Sair</a>
+        </div>
+    </nav>
+
+    <main class="profile-container">
+        <div class="profile-header">
+            <h1>O Meu Espaço</h1>
+            <p>Faça a gestão dos seus dados, segurança e preferências de mercado.</p>
+        </div>
+
+        <div class="profile-grid">
+            <!-- CARTÃO 1: DADOS DO UTILIZADOR -->
+            <div class="profile-card">
+                <h3>Informações Pessoais</h3>
+                <ul class="data-list" id="lista-dados-pessoais">
+                    <li><span class="data-label">Nome Completo</span><span class="data-value" id="display-nome">A carregar...</span></li>
+                    <li><span class="data-label">E-mail de Acesso</span><span class="data-value" id="display-email">A carregar...</span></li>
+                    <li><span class="data-label">Telefone</span><span class="data-value" id="display-telefone">A carregar...</span></li>
+                    <li><span class="data-label">Nível de Operação</span><span class="data-value" id="display-nivel" style="text-transform: capitalize;">A carregar...</span></li>
+                </ul>
+            </div>
+
+            <!-- CARTÃO 2: PREFERÊNCIAS DE TRADING -->
+            <div class="profile-card">
+                <h3>Radar de Curto Prazo</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Os ativos focados para as suas análises técnicas e operações rápidas na plataforma:</p>
+                <div class="trading-tags">
+                    <span class="tag">Ethereum (ETH)</span>
+                    <span class="tag">Solana (SOL)</span>
+                    <span class="tag">Óleo Cru (WTI)</span>
+                    <span class="tag">Ouro (GOLD)</span>
+                </div>
+            </div>
+
+            <!-- CARTÃO 3: SEGURANÇA E SENHA (NOVO) -->
+            <div class="profile-card">
+                <h3>Segurança da Conta</h3>
+                <div class="form-group">
+                    <label>Senha Atual</label>
+                    <input type="password" id="senha-atual" class="form-input" placeholder="Digite a sua senha atual">
+                </div>
+                <div class="form-group">
+                    <label>Nova Senha</label>
+                    <input type="password" id="nova-senha" class="form-input" placeholder="Mínimo 6 caracteres">
+                </div>
+                <div class="form-group">
+                    <label>Confirmar Nova Senha</label>
+                    <input type="password" id="confirma-nova-senha" class="form-input" placeholder="Repita a nova senha">
+                </div>
+                
+                <button class="btn-primary" onclick="alterarSenha()">Atualizar Senha</button>
+                <div id="msg-senha" class="msg"></div>
+            </div>
+        </div>
+
+        <div class="profile-actions">
+            <button class="btn-danger" onclick="apagarConta()">Apagar a Minha Conta</button>
+        </div>
+    </main>
+
+    <!-- LIGAÇÃO AO CÉREBRO GLOBAL JAVASCRIPT -->
+    <script src="app.js"></script>
+
+    <script>
+        window.onload = function() {
+            if (typeof protegerPagina === "function") { protegerPagina(); }
+            carregarDadosDoPerfil();
+        };
+
+        function carregarDadosDoPerfil() {
+            let emailAtivo = localStorage.getItem('usuario_ativo');
+            
+            if (emailAtivo) {
+                let dadosGuardados = localStorage.getItem(emailAtivo);
+                
+                if (dadosGuardados) {
+                    try {
+                        let usuarioAberto = JSON.parse(dadosGuardados);
+                        
+                        document.getElementById('display-nome').innerText = usuarioAberto.nome || "Não definido";
+                        document.getElementById('display-email').innerText = usuarioAberto.email || emailAtivo;
+                        document.getElementById('display-telefone').innerText = usuarioAberto.telefone || "Não definido";
+                        document.getElementById('display-nivel').innerText = usuarioAberto.nivel || "Não definido";
+                    } catch (e) {
+                        document.getElementById('display-email').innerText = emailAtivo;
+                        document.getElementById('display-nome').innerText = "Utilizador Legado";
+                    }
+                }
+            } else {
+                fazerLogout();
+            }
+        }
+
+        // ==========================================
+        // NOVA FUNÇÃO: ALTERAÇÃO SEGURA DE SENHA
+        // ==========================================
+        function alterarSenha() {
+            let senhaAtual = document.getElementById('senha-atual').value;
+            let novaSenha = document.getElementById('nova-senha').value;
+            let confirmaNovaSenha = document.getElementById('confirma-nova-senha').value;
+            let msgBox = document.getElementById('msg-senha');
+
+            // 1. Verifica se deixou campos em branco
+            if (senhaAtual === "" || novaSenha === "" || confirmaNovaSenha === "") {
+                msgBox.innerHTML = "Preencha todos os campos.";
+                msgBox.className = "msg msg-erro";
+                return;
+            }
+
+            // 2. Verifica erro de digitação na nova senha
+            if (novaSenha !== confirmaNovaSenha) {
+                msgBox.innerHTML = "As novas senhas não coincidem.";
+                msgBox.className = "msg msg-erro";
+                return;
+            }
+
+            // 3. Lê quem está online e vai buscar o envelope de dados
+            let emailAtivo = localStorage.getItem('usuario_ativo');
+            let dadosGuardados = localStorage.getItem(emailAtivo);
+
+            if (dadosGuardados) {
+                try {
+                    let usuarioAberto = JSON.parse(dadosGuardados);
+                    
+                    // 4. Verifica se o utilizador acertou na senha atual
+                    if (usuarioAberto.senha !== senhaAtual) {
+                        msgBox.innerHTML = "A senha atual está incorreta.";
+                        msgBox.className = "msg msg-erro";
+                        return;
+                    }
+
+                    // 5. Atualiza o envelope com a nova senha e guarda
+                    usuarioAberto.senha = novaSenha;
+                    localStorage.setItem(emailAtivo, JSON.stringify(usuarioAberto));
+                    
+                    msgBox.innerHTML = "Senha alterada com sucesso!";
+                    msgBox.className = "msg msg-sucesso";
+
+                    // 6. Limpa os campos por segurança
+                    document.getElementById('senha-atual').value = '';
+                    document.getElementById('nova-senha').value = '';
+                    document.getElementById('confirma-nova-senha').value = '';
+
+                } catch (e) {
+                    msgBox.innerHTML = "Não é possível alterar a senha de uma conta legada.";
+                    msgBox.className = "msg msg-erro";
+                }
+            }
+        }
+
+        function apagarConta() {
+            let confirmacao = confirm("Tem a certeza que deseja apagar a sua conta? Esta ação não pode ser desfeita e perderá o acesso à plataforma.");
+            if (confirmacao) {
+                let emailAtivo = localStorage.getItem('usuario_ativo');
+                localStorage.removeItem(emailAtivo); 
+                fazerLogout(); 
+            }
+        }
+    </script>
+</body>
+</html>

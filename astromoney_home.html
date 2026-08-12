@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASTROMONEY - Início</title>
+    <meta name="description" content="Astromoney: A sua plataforma definitiva de trading. Gráficos avançados, fórum com especialistas e radar de notícias do mercado financeiro em tempo real.">
+    <title>ASTROMONEY - Domine o Mercado Financeiro</title>
 
     <!-- LIGAÇÃO AO FICHEIRO CSS GLOBAL -->
     <link rel="stylesheet" href="style.css">
 
     <style>
         /* =========================================
-           ESTILOS EXCLUSIVOS DA PÁGINA INICIAL
+           ESTILOS EXCLUSIVOS DA PÁGINA DE VENDAS
            ========================================= */
 
         body {
-            overflow-x: hidden; /* Evita a barra de rolagem horizontal */
+            overflow-x: hidden; 
         }
 
         /* VÍDEO DE FUNDO E PELÍCULA ESCURA */
@@ -22,59 +23,153 @@
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             object-fit: cover; z-index: -2; 
         }
-
         .pelicula-escura {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background-color: rgba(7, 10, 19, 0.85); z-index: -1; 
+            background-color: rgba(7, 10, 19, 0.75); z-index: -1; 
         }
 
-        /* ÁREA PRINCIPAL (HERO) */
-        .hero {
-            text-align: center; padding: 6rem 2rem; max-width: 900px; margin: 2rem auto;
-            background-color: var(--glass-bg); backdrop-filter: blur(10px);
-            border-radius: 20px; border: 1px solid var(--glass-border); box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        /* AJUSTE ESPECÍFICO DA NAVEGAÇÃO PARA A HOME */
+        .nav-direita {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
-        .hero h1 { font-size: 3rem; margin-bottom: 1.5rem; color: var(--text-main); text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-        .hero p { color: var(--text-muted); font-size: 1.2rem; margin-bottom: 2rem; }
+
+        /* Botão de Login sempre visível no topo direito */
+        .btn-login-visivel {
+            background: linear-gradient(90deg, var(--primary-blue), #1d4ed8);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+            transition: all 0.3s ease;
+        }
+        .btn-login-visivel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(56, 189, 248, 0.6);
+        }
+
+        /* =========================================
+           ÁREA PRINCIPAL (HERO - SEM CAIXA)
+           ========================================= */
+        .hero-landing {
+            text-align: center; 
+            padding: 12vh 2rem 5vh; 
+            max-width: 1000px; 
+            margin: 0 auto;
+            /* A caixa de vidro foi removida para um visual mais limpo */
+        }
+        
+        .hero-landing h1 { 
+            font-size: 3.8rem; 
+            margin-bottom: 1.5rem; 
+            color: #ffffff; 
+            /* Sombra forte aplicada ao texto para garantir legibilidade sobre o vídeo */
+            text-shadow: 0 4px 20px rgba(0,0,0,0.9), 0 2px 5px rgba(0,0,0,0.8); 
+            line-height: 1.1;
+        }
+        
+        .hero-landing p { 
+            color: #f3f4f6; 
+            font-size: 1.3rem; 
+            margin-bottom: 3rem; 
+            text-shadow: 0 2px 10px rgba(0,0,0,0.9);
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
         
         .badge {
-            display: inline-block; background: rgba(37, 99, 235, 0.2); color: #60a5fa;
-            padding: 0.5rem 1.2rem; border-radius: 30px; font-size: 0.9rem; font-weight: 600;
-            margin-bottom: 1.5rem; border: 1px solid rgba(59, 130, 246, 0.3);
+            display: inline-block; background: rgba(37, 99, 235, 0.3); color: #93c5fd;
+            padding: 0.6rem 1.5rem; border-radius: 30px; font-size: 0.9rem; font-weight: 700;
+            margin-bottom: 2rem; border: 1px solid rgba(59, 130, 246, 0.5);
+            text-transform: uppercase; letter-spacing: 1px;
+            backdrop-filter: blur(5px);
         }
 
-        /* CARROSSEL DE NOTÍCIAS */
-        .news-section { padding: 2rem 5%; max-width: 1000px; margin: 0 auto 4rem auto; }
-        .news-section h2 { text-align: center; margin-bottom: 2rem; font-size: 2rem; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
-        
-        .slider-container {
-            position: relative; width: 100%; overflow: hidden; border-radius: 16px;
-            background-color: var(--glass-bg); backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        .cta-primario {
+            display: inline-block;
+            background: var(--primary-blue);
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            text-transform: uppercase;
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.6);
+            transition: 0.3s;
+            border: 2px solid transparent;
         }
-        .slides { display: flex; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); width: 100%; }
-        .slide { min-width: 100%; padding: 5rem 3rem; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        
-        .slide-tag { color: var(--neon-blue); font-weight: bold; margin-bottom: 1rem; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 2px; }
-        .slide h3 { font-size: 2rem; margin-bottom: 1rem; }
-        .slide p { color: var(--text-muted); max-width: 600px; font-size: 1.1rem; }
-        
-        .slider-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(5px); color: white; border: 1px solid var(--glass-border); cursor: pointer; padding: 1rem; font-size: 1.5rem; border-radius: 50%; transition: all 0.3s; }
-        .slider-btn:hover { background: var(--primary-blue); border-color: var(--primary-blue); box-shadow: 0 0 15px var(--primary-blue); }
-        .prev { left: 15px; } .next { right: 15px; }
+        .cta-primario:hover {
+            background: transparent;
+            border-color: var(--neon-blue);
+            color: var(--neon-blue);
+            box-shadow: 0 0 35px rgba(56, 189, 248, 0.8);
+            transform: scale(1.05);
+        }
 
-        .dots { text-align: center; margin-top: 1.5rem; }
-        .dot { display: inline-block; width: 10px; height: 10px; background-color: rgba(255,255,255,0.2); border-radius: 50%; margin: 0 5px; cursor: pointer; transition: all 0.3s; }
-        .dot.active { background-color: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); transform: scale(1.3); }
+        /* =========================================
+           SEÇÃO DE BENEFÍCIOS (SEO & VENDAS)
+           ========================================= */
+        .features-section {
+            padding: 4rem 5%;
+            max-width: 1200px;
+            margin: 0 auto 5rem;
+        }
 
-        footer { text-align: center; padding: 2rem; background-color: rgba(7, 10, 19, 0.9); border-top: 1px solid var(--glass-border); color: var(--text-muted); }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: rgba(15, 20, 35, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 2.5rem 2rem;
+            border-radius: 16px;
+            text-align: left;
+            transition: 0.3s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary-blue);
+            box-shadow: 0 15px 40px rgba(59, 130, 246, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            color: var(--text-main);
+            margin-bottom: 1rem;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        footer { text-align: center; padding: 2rem; background-color: rgba(7, 10, 19, 0.95); border-top: 1px solid var(--glass-border); color: var(--text-muted); }
         
-        /* RESPONSIVIDADE EXCLUSIVA PARA OS ELEMENTOS DESTA PÁGINA */
+        /* RESPONSIVIDADE */
         @media (max-width: 768px) {
-            .hero { margin: 1rem; padding: 3rem 1rem; }
-            .hero h1 { font-size: 2rem; }
-            .slide { padding: 3rem 1.5rem; }
-            .slide h3 { font-size: 1.5rem; }
+            .hero-landing h1 { font-size: 2.5rem; }
+            .hero-landing p { font-size: 1.1rem; }
+            .btn-login-visivel { display: none; /* Esconde no telemóvel para usar apenas o menu de gaveta */ }
         }
     </style>
 </head>
@@ -91,95 +186,61 @@
     <nav>
         <a href="astromoney_home.html" class="logo">ASTRO<span>MONEY</span></a>
         
-        <!-- O NOVO BOTÃO DE MENU MOBILE -->
-        <button class="menu-mobile-btn" onclick="alternarMenuMobile()">☰</button>
+        <!-- Bloco Novo: Agrupa o botão Login e o Menu Hambúrguer -->
+        <div class="nav-direita">
+            <a href="login.html" class="btn-login-visivel">Entrar / Registrar</a>
+            <button class="menu-mobile-btn" onclick="alternarMenuMobile()">☰</button>
+        </div>
         
+        <!-- Gaveta de Links -->
         <div class="nav-links">
             <a href="astromoney_home.html" class="active">Início</a>
-            <a href="grafico.html">Gráfico</a>
-            <a href="noticias.html">Notícias</a>
-            <a href="forum.html">Fórum</a>
-            <a href="login.html" class="btn-login">Entrar / Registrar</a>
+            <a href="login.html">Criar Conta / Entrar</a>
         </div>
     </nav>
 
-    <header class="hero">
-        <span class="badge">Desenvolvimento Pessoal em Andamento</span>
-        <h1>Bem-vindo ao ASTROMONEY</h1>
-        <p>Este é um projeto pessoal que está a dar os primeiros passos. O objetivo do <strong>ASTROMONEY</strong> é criar um ecossistema completo para acompanhar e analisar mercados estrangeiros, como Criptomoedas, Forex, Índices e Commodities, partilhando conhecimento e ferramentas ao longo desta jornada de desenvolvimento.</p>
-    </header>
+    <!-- O conteúdo da página agora usa tags semânticas (<main>, <header>) essenciais para SEO -->
+    <main>
+        <header class="hero-landing">
+            <span class="badge">Aprenda a Operar com Especialistas</span>
+            <h1>Domine o Mercado Financeiro com <span style="color: var(--neon-blue);">ASTROMONEY</span></h1>
+            <p>O ecossistema completo para acompanhar e analisar mercados estrangeiros. Aprenda, partilhe conhecimentos e execute as suas operações com ferramentas de nível institucional.</p>
+            
+            <a href="login.html" class="cta-primario">Acessar a Plataforma</a>
+        </header>
 
-    <section class="news-section">
-        <h2>Últimas Atualizações do Mercado</h2>
-        
-        <div class="slider-container">
-            <div class="slides" id="slides">
-                <div class="slide">
-                    <span class="slide-tag">Criptomoedas</span>
-                    <h3>Bitcoin atinge nova marca histórica</h3>
-                    <p>O mercado de criptomoedas viu uma forte alta esta semana, impulsionada pela entrada de novos investidores institucionais no mercado global.</p>
+        <section class="features-section">
+            <div class="features-grid">
+                <!-- Benefício 1: Gráficos -->
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3>Terminal Interativo</h3>
+                    <p>Execute as suas análises técnicas com precisão absoluta. Integração nativa com o TradingView, oferecendo acompanhamento de Criptomoedas, Forex, Commodities e Índices em tempo real.</p>
                 </div>
-                <div class="slide">
-                    <span class="slide-tag">Forex</span>
-                    <h3>EUR/USD reage aos dados de inflação</h3>
-                    <p>O par de moedas mais negociado do mundo apresentou grande volatilidade após os últimos relatórios econômicos europeus.</p>
+                
+                <!-- Benefício 2: Comunidade -->
+                <div class="feature-card">
+                    <div class="feature-icon">👥</div>
+                    <h3>Comunidade e Fórum</h3>
+                    <p>Não opere sozinho. Tire dúvidas, aprenda táticas avançadas com especialistas e partilhe as suas visões de mercado numa comunidade dedicada ao crescimento financeiro.</p>
                 </div>
-                <div class="slide">
-                    <span class="slide-tag">Commodities</span>
-                    <h3>Ouro consolida posição de ativo de refúgio</h3>
-                    <p>Com as incertezas nos mercados de ações, o ouro volta a ser procurado por investidores em busca de segurança a longo prazo.</p>
+                
+                <!-- Benefício 3: Notícias -->
+                <div class="feature-card">
+                    <div class="feature-icon">📰</div>
+                    <h3>Radar de Notícias</h3>
+                    <p>Antecipe-se aos movimentos institucionais. Um porto de notícias atualizado ao segundo, monitorizando a economia global, geopolítica e inteligência artificial.</p>
                 </div>
             </div>
-
-            <button class="slider-btn prev" onclick="moveSlide(-1)">❮</button>
-            <button class="slider-btn next" onclick="moveSlide(1)">❯</button>
-        </div>
-        
-        <div class="dots" id="dots-container">
-            <span class="dot active" onclick="currentSlide(0)"></span>
-            <span class="dot" onclick="currentSlide(1)"></span>
-            <span class="dot" onclick="currentSlide(2)"></span>
-        </div>
-    </section>
+        </section>
+    </main>
 
     <footer>
-        <p>&copy; 2026 ASTROMONEY. Projeto Pessoal em Desenvolvimento.</p>
+        <p>&copy; 2026 ASTROMONEY. Todos os direitos reservados.</p>
     </footer>
 
     <!-- LIGAÇÃO AO CÉREBRO GLOBAL JAVASCRIPT -->
     <script src="app.js"></script>
 
-    <!-- Lógica JavaScript local (O cérebro do Slider) -->
-    <script>
-        let indexAtual = 0;
-        const slides = document.getElementById("slides");
-        const pontos = document.querySelectorAll(".dot");
-        const totalSlides = document.querySelectorAll(".slide").length;
-
-        function atualizarSlide() {
-            slides.style.transform = `translateX(-${indexAtual * 100}%)`;
-            pontos.forEach(ponto => ponto.classList.remove("active"));
-            pontos[indexAtual].classList.add("active");
-        }
-
-        function moveSlide(direcao) {
-            indexAtual = indexAtual + direcao;
-            if (indexAtual >= totalSlides) {
-                indexAtual = 0;
-            } else if (indexAtual < 0) {
-                indexAtual = totalSlides - 1;
-            }
-            atualizarSlide();
-        }
-
-        function currentSlide(index) {
-            indexAtual = index;
-            atualizarSlide();
-        }
-
-        setInterval(() => {
-            moveSlide(1);
-        }, 5000);
-    </script>
 </body>
 </html>

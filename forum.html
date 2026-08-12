@@ -63,17 +63,14 @@
 </head>
 <body>
     <nav>
-        <a href="astromoney_home.html" class="logo">ASTRO<span>MONEY</span></a>
-        
-        <!-- NOVO BOTÃO HAMBÚRGUER -->
+        <a href="grafico.html" class="logo">ASTRO<span>MONEY</span></a>
         <button class="menu-mobile-btn" onclick="alternarMenuMobile()">☰</button>
-        
         <div class="nav-links">
-            <a href="astromoney_home.html">Início</a>
             <a href="grafico.html">Gráfico</a>
             <a href="noticias.html">Notícias</a>
-            <a href="forum.html">Fórum</a>
-            <a href="login.html" class="btn-login">Entrar / Registrar</a>
+            <a href="forum.html" class="active">Fórum</a>
+            <a href="perfil.html">Perfil</a>
+            <a href="#" onclick="fazerLogout()" class="btn-login" style="background: #ef4444 !important; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4) !important;">Sair</a>
         </div>
     </nav>
 
@@ -157,7 +154,10 @@
             }
         }
 
-        window.onload = function() { renderizarPosts(); };
+        window.onload = function() { 
+            protegerPagina(); // O segurança verifica a porta!
+            desenharGrafico('TVC:GOLD'); 
+        };
     </script>
 </body>
 </html>
