@@ -1,0 +1,120 @@
+/* =========================================
+   ESTILOS GLOBAIS - ASTROMONEY
+   Este ficheiro controla o design comum de todas as páginas
+   ========================================= */
+
+/* 1. VARIÁVEIS DE CORES E TEMA */
+:root {
+    --bg-color: #070a13;
+    --panel-bg: #0f1423;
+    --primary-blue: #3b82f6;
+    --neon-blue: #38bdf8;
+    --primary-hover: #2563eb; 
+    --text-main: #f3f4f6;
+    --text-muted: #9ca3af;
+    --border-color: #1e293b;
+    --glass-bg: rgba(11, 15, 25, 0.7); 
+    --glass-border: rgba(255, 255, 255, 0.05);
+}
+
+/* 2. RESET BÁSICO */
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+}
+
+body {
+    background-color: var(--bg-color); 
+    color: var(--text-main);
+    line-height: 1.6;
+}
+
+/* 3. NAVEGAÇÃO E LOGO ANIMADO */
+nav {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    padding: 1rem 5%; 
+    background-color: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--glass-border); 
+    position: sticky; 
+    top: 0; 
+    z-index: 100;
+}
+
+.logo {
+    font-size: 1.8rem; 
+    font-weight: 900; 
+    color: var(--text-main); 
+    text-decoration: none;
+    letter-spacing: 1px; 
+    transition: all 0.3s ease;
+}
+
+.logo:hover { 
+    text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); 
+}
+
+@keyframes brilho-vivo {
+    0% { background-position: 0% center; }
+    100% { background-position: 200% center; }
+}
+
+.logo span {
+    background: linear-gradient(90deg, var(--primary-blue) 0%, #93c5fd 50%, var(--primary-blue) 100%);
+    background-size: 200% auto; 
+    color: transparent;
+    -webkit-background-clip: text; 
+    background-clip: text;
+    animation: brilho-vivo 3s linear infinite;
+}
+
+/* 4. LINKS DO MENU SUPERIOR */
+.nav-links { 
+    display: flex; 
+    gap: 1.5rem; 
+    align-items: center; 
+}
+
+.nav-links a { 
+    background-color: rgba(59, 130, 246, 0.1); 
+    color: var(--neon-blue); 
+    text-decoration: none; 
+    font-weight: 600; 
+    text-transform: uppercase;
+    font-size: 0.85rem; 
+    letter-spacing: 1px; 
+    padding: 10px 20px; 
+    border-radius: 30px; 
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    transition: all 0.3s ease; 
+}
+
+.nav-links a:hover, .nav-links a.active { 
+    background-color: var(--primary-blue); 
+    color: #ffffff; 
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.5); 
+    transform: translateY(-2px); 
+}
+
+.btn-login { 
+    background: linear-gradient(90deg, var(--primary-blue), #1d4ed8) !important; 
+    color: white !important; 
+    border: none !important; 
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4) !important; 
+}
+
+.btn-login:hover { 
+    box-shadow: 0 6px 20px rgba(56, 189, 248, 0.6) !important; 
+}
+
+/* RESPONSIVIDADE GLOBAL (TELEMÓVEIS) */
+@media (max-width: 768px) {
+    nav { flex-direction: column; gap: 1rem; padding: 1.5rem; }
+    .nav-links { flex-wrap: wrap; justify-content: center; }
+}

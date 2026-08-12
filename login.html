@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASTROMONEY - Entrar / Registrar</title>
+    
+    <!-- LIGAÇÃO AO FICHEIRO CSS GLOBAL -->
+    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        /* =========================================
+           ESTILOS EXCLUSIVOS DESTA PÁGINA (LOGIN)
+           ========================================= */
+        body {
+            display: flex; flex-direction: column; min-height: 100vh;
+        }
+
+        .auth-container { flex-grow: 1; display: flex; justify-content: center; align-items: center; padding: 2rem; }
+        .auth-box { background-color: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 3rem 2.5rem; width: 100%; max-width: 420px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
+
+        .auth-tabs { display: flex; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); }
+        .tab-btn { flex: 1; background: none; border: none; color: var(--text-muted); padding: 1rem; font-size: 1.1rem; cursor: pointer; transition: 0.3s; }
+        .tab-btn.active { color: var(--neon-blue); border-bottom: 3px solid var(--primary-blue); font-weight: bold; }
+
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted); font-weight: 500;}
+        .form-group input { width: 100%; padding: 0.9rem; border-radius: 8px; background-color: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-main); outline: none; transition: 0.3s; font-size: 1rem; }
+        .form-group input:focus { border-color: var(--primary-blue); box-shadow: 0 0 8px rgba(59, 130, 246, 0.3); }
+
+        .btn-submit { width: 100%; padding: 1.1rem; background-color: var(--primary-blue); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; margin-top: 1rem; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); }
+        .btn-submit:hover { background-color: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(59, 130, 246, 0.5); }
+
+        .form-section { display: none; }
+        .form-section.active { display: block; }
+        .msg { margin-top: 1.5rem; text-align: center; font-size: 0.9rem; min-height: 20px; font-weight: 500;}
+        .msg-erro { color: #f87171; } 
+        .msg-sucesso { color: #34d399; } 
+
+        @media (max-width: 768px) { .auth-box { padding: 2rem 1.5rem; } }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="astromoney_home.html" class="logo">ASTRO<span>MONEY</span></a>
+        <div class="nav-links">
+            <a href="astromoney_home.html">Início</a>
+            <a href="grafico.html">Gráfico</a>
+            <a href="noticias.html">Notícias</a>
+            <a href="forum.html">Fórum</a>
+            <a href="login.html" class="btn-login active">Entrar / Registrar</a>
+        </div>
+    </nav>
+
+    <div class="auth-container">
+        <!-- O resto do seu código de formulário permanece igual... -->
+        <div class="auth-box">
+            <div class="auth-tabs">
+                <button class="tab-btn active" onclick="mudarAba('login')">Entrar</button>
+                <button class="tab-btn" onclick="mudarAba('registrar')">Registrar</button>
+            </div>
+            <div id="form-login" class="form-section active">
+                <div class="form-group"><label>E-mail</label><input type="email" id="login-email" placeholder="seu@email.com"></div>
+                <div class="form-group"><label>Senha</label><input type="password" id="login-senha" placeholder="••••••••"></div>
+                <button class="btn-submit" onclick="fazerLogin()">Acessar Plataforma</button>
+                <div id="msg-login" class="msg"></div>
+            </div>
+            <div id="form-registrar" class="form-section">
+                <div class="form-group"><label>E-mail</label><input type="email" id="reg-email" placeholder="seu@email.com"></div>
+                <div class="form-group"><label>Criar Senha</label><input type="password" id="reg-senha" placeholder="Mínimo 6 caracteres"></div>
+                <button class="btn-submit" onclick="registrarUsuario()">Criar Conta</button>
+                <div id="msg-registro" class="msg"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- O CÉREBRO: Lógica JavaScript intacta e segura -->
+<script src="app.js"></script>
+
+    <script>
+        function mudarAba(abaDestino) {
+            document.getElementById('form-login').classList.remove('active');
+            document.getElementById('form-registrar').classList.remove('active');
+            let botoes = document.querySelectorAll('.tab-btn');
+            botoes[0].classList.remove('active'); botoes[1].classList.remove('active'); 
+
+            if (abaDestino === 'login') { document.getElementById('form-login').classList.add('active'); botoes[0].classList.add('active'); } 
+            else { document.getElementById('form-registrar').classList.add('active'); botoes[1].classList.add('active'); }
+            
+            document.getElementById('msg-login').innerHTML = ''; document.getElementById('msg-registro').innerHTML = '';
+        }
+
+        function registrarUsuario() {
+            let email = document.getElementById('reg-email').value;
+            let senha = document.getElementById('reg-senha').value;
+            let msgBox = document.getElementById('msg-registro');
+            if (email === "" || senha === "") { msgBox.innerHTML = "Por favor, preencha todos os campos."; msgBox.className = "msg msg-erro"; return; }
+
+            localStorage.setItem(email, senha);
+            msgBox.innerHTML = "Conta criada com sucesso! Pode fazer login."; msgBox.className = "msg msg-sucesso";
+            document.getElementById('reg-email').value = ''; document.getElementById('reg-senha').value = '';
+        }
+
+        function fazerLogin() {
+            let email = document.getElementById('login-email').value;
+            let senha = document.getElementById('login-senha').value;
+            let msgBox = document.getElementById('msg-login');
+            let senhaGuardada = localStorage.getItem(email);
+
+            if (senhaGuardada === null) { msgBox.innerHTML = "Conta não encontrada. Registe-se primeiro."; msgBox.className = "msg msg-erro"; } 
+            else if (senhaGuardada === senha) { msgBox.innerHTML = "Acesso autorizado! A redirecionar..."; msgBox.className = "msg msg-sucesso"; setTimeout(() => { window.location.href = "astromoney_home.html"; }, 1500); } 
+            else { msgBox.innerHTML = "Senha incorreta."; msgBox.className = "msg msg-erro"; }
+        }
+    </script>
+</body>
+</html>

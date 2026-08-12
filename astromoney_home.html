@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASTROMONEY - Início</title>
+    <style>
+        /* =========================================
+           1. VARIÁVEIS DE CORES E TEMA
+           ========================================= */
+        :root {
+            --bg-color: #070a13; 
+            --glass-bg: rgba(11, 15, 25, 0.7); 
+            --glass-border: rgba(255, 255, 255, 0.05);
+            --primary-blue: #3b82f6;
+            --neon-blue: #38bdf8;
+            --primary-hover: #2563eb;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+        }
+
+        /* Reset Básico de Margens */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* O corpo da página agora é apenas a base para o nosso conteúdo */
+        body {
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            background-color: var(--bg-color); /* Cor de segurança caso o vídeo demore a carregar */
+        }
+
+        /* =========================================
+           2. VÍDEO DE FUNDO E PELÍCULA ESCURA
+           ========================================= */
+        .video-fundo {
+            position: fixed; /* Fixa na tela */
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover; /* Estica o vídeo para cobrir a tela inteira sem distorcer */
+            z-index: -2; /* Coloca o vídeo na camada mais funda do site */
+        }
+
+        .pelicula-escura {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(7, 10, 19, 0.85); /* 85% de preto/azul escuro */
+            z-index: -1; /* Fica acima do vídeo, mas abaixo de todo o resto */
+        }
+
+        /* =========================================
+           3. NAVEGAÇÃO E LOGOTIPO ANIMADO
+           ========================================= */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+            background-color: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--text-main);
+            text-decoration: none;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+        .logo:hover {
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+        
+        @keyframes brilho-vivo {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+        .logo span {
+            background: linear-gradient(90deg, var(--primary-blue) 0%, #93c5fd 50%, var(--primary-blue) 100%);
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: brilho-vivo 3s linear infinite;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            background-color: rgba(59, 130, 246, 0.1); 
+            color: var(--neon-blue); 
+            text-decoration: none; 
+            font-weight: 600; 
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            padding: 10px 20px; 
+            border-radius: 30px; 
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease; 
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background-color: var(--primary-blue);
+            color: #ffffff; 
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.5); 
+            transform: translateY(-2px); 
+        }
+
+        .btn-login {
+            background: linear-gradient(90deg, var(--primary-blue), #1d4ed8);
+            color: white !important;
+            border: none !important;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4) !important;
+        }
+        .btn-login:hover {
+            box-shadow: 0 6px 20px rgba(56, 189, 248, 0.6) !important;
+        }
+
+        /* =========================================
+           4. ÁREA PRINCIPAL (HERO) E CAIXA DE VIDRO
+           ========================================= */
+        .hero {
+            text-align: center;
+            padding: 6rem 2rem;
+            max-width: 900px;
+            margin: 2rem auto;
+            background-color: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-main);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .hero p {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(37, 99, 235, 0.2);
+            color: #60a5fa;
+            padding: 0.5rem 1.2rem;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        /* =========================================
+           5. CARROSSEL DE NOTÍCIAS
+           ========================================= */
+        .news-section {
+            padding: 2rem 5%;
+            max-width: 1000px;
+            margin: 0 auto 4rem auto;
+        }
+
+        .news-section h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .slider-container {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            border-radius: 16px;
+            background-color: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        }
+
+        .slides {
+            display: flex;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+        }
+
+        .slide {
+            min-width: 100%;
+            padding: 5rem 3rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .slide-tag {
+            color: var(--neon-blue);
+            font-weight: bold;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+        }
+
+        .slide h3 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .slide p {
+            color: var(--text-muted);
+            max-width: 600px;
+            font-size: 1.1rem;
+        }
+
+        .slider-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            color: white;
+            border: 1px solid var(--glass-border);
+            cursor: pointer;
+            padding: 1rem;
+            font-size: 1.5rem;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .slider-btn:hover {
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 15px var(--primary-blue);
+        }
+
+        .prev { left: 15px; }
+        .next { right: 15px; }
+
+        .dots {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            margin: 0 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .dot.active {
+            background-color: var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue);
+            transform: scale(1.3);
+        }
+
+        /* Rodapé */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            background-color: rgba(7, 10, 19, 0.9);
+            border-top: 1px solid var(--glass-border);
+            color: var(--text-muted);
+        }
+        
+        /* Responsividade (Telemóvel) */
+        @media (max-width: 768px) {
+            nav { flex-direction: column; gap: 1rem; padding: 1.5rem; }
+            .nav-links { flex-wrap: wrap; justify-content: center; }
+            .hero { margin: 1rem; padding: 3rem 1rem; }
+            .hero h1 { font-size: 2rem; }
+            .slide { padding: 3rem 1.5rem; }
+            .slide h3 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- AQUI ESTÁ A MÁGICA: O VÍDEO RODANDO NO FUNDO -->
+    <video autoplay loop muted playsinline class="video-fundo">
+        <source src="universo.mp4" type="video/mp4">
+    </video>
+    
+    <!-- Esta é a camada escura que garante que o texto fique legível -->
+    <div class="pelicula-escura"></div>
+
+    <nav>
+        <a href="astromoney_home.html" class="logo">ASTRO<span>MONEY</span></a>
+        <div class="nav-links">
+            <a href="astromoney_home.html" class="active">Início</a>
+            <a href="grafico.html">Gráfico</a>
+            <a href="noticias.html">Notícias</a>
+            <!-- LIGAÇÃO CORRIGIDA PARA A PÁGINA DO FÓRUM -->
+            <a href="forum.html">Fórum</a>
+            <a href="login.html" class="btn-login">Entrar / Registrar</a>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <span class="badge">Desenvolvimento Pessoal em Andamento</span>
+        <h1>Bem-vindo ao ASTROMONEY</h1>
+        <p>Este é um projeto pessoal que está a dar os primeiros passos. O objetivo do <strong>ASTROMONEY</strong> é criar um ecossistema completo para acompanhar e analisar mercados estrangeiros, como Criptomoedas, Forex, Índices e Commodities, partilhando conhecimento e ferramentas ao longo desta jornada de desenvolvimento.</p>
+    </header>
+
+    <section class="news-section">
+        <h2>Últimas Atualizações do Mercado</h2>
+        
+        <div class="slider-container">
+            <div class="slides" id="slides">
+                <div class="slide">
+                    <span class="slide-tag">Criptomoedas</span>
+                    <h3>Bitcoin atinge nova marca histórica</h3>
+                    <p>O mercado de criptomoedas viu uma forte alta esta semana, impulsionada pela entrada de novos investidores institucionais no mercado global.</p>
+                </div>
+                <div class="slide">
+                    <span class="slide-tag">Forex</span>
+                    <h3>EUR/USD reage aos dados de inflação</h3>
+                    <p>O par de moedas mais negociado do mundo apresentou grande volatilidade após os últimos relatórios econômicos europeus.</p>
+                </div>
+                <div class="slide">
+                    <span class="slide-tag">Commodities</span>
+                    <h3>Ouro consolida posição de ativo de refúgio</h3>
+                    <p>Com as incertezas nos mercados de ações, o ouro volta a ser procurado por investidores em busca de segurança a longo prazo.</p>
+                </div>
+            </div>
+
+            <button class="slider-btn prev" onclick="moveSlide(-1)">❮</button>
+            <button class="slider-btn next" onclick="moveSlide(1)">❯</button>
+        </div>
+        
+        <div class="dots" id="dots-container">
+            <span class="dot active" onclick="currentSlide(0)"></span>
+            <span class="dot" onclick="currentSlide(1)"></span>
+            <span class="dot" onclick="currentSlide(2)"></span>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 ASTROMONEY. Projeto Pessoal em Desenvolvimento.</p>
+    </footer>
+
+    <!-- Lógica JavaScript (O cérebro do Slider) -->
+<script src="app.js"></script>
+
+    <script>
+        let indexAtual = 0;
+        const slides = document.getElementById("slides");
+        const pontos = document.querySelectorAll(".dot");
+        const totalSlides = document.querySelectorAll(".slide").length;
+
+        function atualizarSlide() {
+            slides.style.transform = `translateX(-${indexAtual * 100}%)`;
+            pontos.forEach(ponto => ponto.classList.remove("active"));
+            pontos[indexAtual].classList.add("active");
+        }
+
+        function moveSlide(direcao) {
+            indexAtual = indexAtual + direcao;
+            if (indexAtual >= totalSlides) {
+                indexAtual = 0;
+            } else if (indexAtual < 0) {
+                indexAtual = totalSlides - 1;
+            }
+            atualizarSlide();
+        }
+
+        function currentSlide(index) {
+            indexAtual = index;
+            atualizarSlide();
+        }
+
+        setInterval(() => {
+            moveSlide(1);
+        }, 5000);
+    </script>
+</body>
+</html>

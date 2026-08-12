@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASTROMONEY - Notícias do Mercado</title>
+    
+    <!-- LIGAÇÃO AO FICHEIRO CSS GLOBAL -->
+    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        /* =========================================
+           ESTILOS EXCLUSIVOS DESTA PÁGINA (NOTÍCIAS)
+           ========================================= */
+
+        /* CABEÇALHO E FILTROS */
+        .page-header { text-align: center; padding: 3rem 2rem 1rem; background-color: var(--bg-color); }
+        .page-header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--text-main); }
+        .page-header p { color: var(--text-muted); }
+
+        .topics-container { display: flex; justify-content: center; gap: 1rem; padding: 1.5rem 5%; background-color: var(--bg-color); flex-wrap: wrap; border-bottom: 1px solid var(--border-color); }
+        .topic-btn { background-color: var(--panel-bg); color: var(--text-muted); border: 1px solid var(--border-color); padding: 0.6rem 1.2rem; border-radius: 20px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.3s ease; }
+        .topic-btn:hover { border-color: var(--primary-blue); color: var(--text-main); }
+        .topic-btn.active { background-color: var(--primary-blue); color: white; border-color: var(--primary-blue); box-shadow: 0 0 10px rgba(59, 130, 246, 0.4); }
+
+        /* GRID E CARTÕES */
+        .news-container { padding: 3rem 5%; max-width: 1200px; margin: 0 auto; }
+        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 2rem; }
+        .news-card { background-color: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; transition: transform 0.3s, box-shadow 0.3s; display: flex; flex-direction: column; }
+        .news-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.4); border-color: var(--primary-blue); }
+        
+        .image-wrapper { width: 100%; height: 200px; overflow: hidden; }
+        .news-image { width: 100%; height: 100%; background-color: var(--border-color); background-size: cover; background-position: center; transition: transform 0.5s ease; }
+        .news-card:hover .news-image { transform: scale(1.1); }
+
+        .news-content { padding: 1.5rem; flex-grow: 1; display: flex; flex-direction: column; }
+        .news-source { font-size: 0.8rem; color: var(--neon-blue); font-weight: bold; text-transform: uppercase; margin-bottom: 0.5rem; }
+        .news-title { font-size: 1.15rem; margin-bottom: 1rem; color: var(--text-main); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .news-date { font-size: 0.85rem; color: var(--text-muted); margin-top: auto; margin-bottom: 1rem; }
+        
+        .news-btn { display: block; text-align: center; background-color: rgba(59, 130, 246, 0.1); color: var(--primary-blue); border: 1px solid var(--primary-blue); padding: 0.6rem; border-radius: 6px; text-decoration: none; font-weight: 600; transition: all 0.3s; }
+        .news-btn:hover { background-color: var(--primary-blue); color: white; box-shadow: 0 0 10px rgba(59, 130, 246, 0.4); }
+        .loading { text-align: center; font-size: 1.2rem; color: var(--neon-blue); grid-column: 1 / -1; padding: 3rem; font-weight: bold; }
+
+        @media (max-width: 768px) { 
+            .page-header h1 { font-size: 2rem; } 
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="astromoney_home.html" class="logo">ASTRO<span>MONEY</span></a>
+        <div class="nav-links">
+            <a href="astromoney_home.html">Início</a>
+            <a href="grafico.html">Gráfico</a>
+            <a href="noticias.html" class="active">Notícias</a>
+            <a href="forum.html">Fórum</a>
+            <a href="login.html" class="btn-login">Entrar / Registrar</a>
+        </div>
+    </nav>
+
+    <header class="page-header">
+        <h1>Radar do Mercado</h1>
+        <p>Acompanhe as últimas informações e tendências filtradas por setores estratégicos.</p>
+    </header>
+
+    <div class="topics-container">
+        <button class="topic-btn active" onclick="carregarNoticias('ultimas', this)">Últimas Relevantes</button>
+        <button class="topic-btn" onclick="carregarNoticias('money', this)">Money (Economia)</button>
+        <button class="topic-btn" onclick="carregarNoticias('politica', this)">Política</button>
+        <button class="topic-btn" onclick="carregarNoticias('agro', this)">Agro</button>
+        <button class="topic-btn" onclick="carregarNoticias('ia', this)">Tecnologia & IA</button>
+        <button class="topic-btn" onclick="carregarNoticias('infra', this)">INFRA</button>
+    </div>
+
+    <main class="news-container">
+        <div class="news-grid" id="caixa-de-noticias">
+            <div class="loading">A mapear o mercado. Por favor, aguarde...</div>
+        </div>
+    </main>
+
+<script src="app.js"></script>
+
+    <script>
+        const fontesRSS = {
+            'ultimas': 'https://news.google.com/rss?hl=pt-BR&gl=BR&ceid=BR:pt-419',
+            'money': 'https://news.google.com/rss/search?q=Mercado+Financeiro+Economia&hl=pt-BR&gl=BR&ceid=BR:pt-419',
+            'politica': 'https://news.google.com/rss/search?q=Politica+Brasil&hl=pt-BR&gl=BR&ceid=BR:pt-419',
+            'agro': 'https://news.google.com/rss/search?q=Agronegócio+Brasil&hl=pt-BR&gl=BR&ceid=BR:pt-419',
+            'ia': 'https://news.google.com/rss/search?q=Inteligência+Artificial+Tecnologia&hl=pt-BR&gl=BR&ceid=BR:pt-419',
+            'infra': 'https://news.google.com/rss/search?q=Infraestrutura+Brasil+Obras&hl=pt-BR&gl=BR&ceid=BR:pt-419'
+        };
+
+        const imagensFallback = {
+            'ultimas': ['https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1590283603385-18ff3827fcce?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80'],
+            'money': ['https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1580519542036-ed47ce12220a?auto=format&fit=crop&w=800&q=80'],
+            'politica': ['https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=800&q=80'],
+            'agro': ['https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80'],
+            'ia': ['https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80'],
+            'infra': ['https://images.unsplash.com/photo-1541888087525-076162514de7?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=800&q=80']
+        };
+
+        function extrairImagem(noticia, categoriaId, posicaoDaNoticia) {
+            const regexImagem = /<img[^>]+src="([^">]+)"/;
+            const matchDescricao = noticia.description ? noticia.description.match(regexImagem) : null;
+            if (matchDescricao && matchDescricao[1]) return matchDescricao[1];
+            
+            const galeria = imagensFallback[categoriaId] || imagensFallback['ultimas'];
+            return galeria[posicaoDaNoticia % galeria.length];
+        }
+
+        function carregarNoticias(categoriaId, botaoClicado) {
+            if(botaoClicado) {
+                document.querySelectorAll('.topic-btn').forEach(btn => btn.classList.remove('active'));
+                botaoClicado.classList.add('active');
+            }
+            const caixaDeNoticias = document.getElementById('caixa-de-noticias');
+            caixaDeNoticias.innerHTML = '<div class="loading">A pesquisar os últimos artigos para si...</div>';
+
+            const linkRSS = fontesRSS[categoriaId];
+            const urlConversora = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(linkRSS)}`;
+
+            fetch(urlConversora)
+                .then(resposta => resposta.json())
+                .then(dados => {
+                    caixaDeNoticias.innerHTML = ''; 
+                    if(dados.items && dados.items.length > 0) {
+                        dados.items.slice(0, 12).forEach((noticia, index) => {
+                            let imagemEncontrada = extrairImagem(noticia, categoriaId, index);
+                            let dataFormatada = new Date(noticia.pubDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' });
+                            let tituloLimpo = noticia.title.split(' - ')[0];
+
+                            const cartaoHTML = `
+                                <div class="news-card">
+                                    <div class="image-wrapper"><div class="news-image" style="background-image: url('${imagemEncontrada}');"></div></div>
+                                    <div class="news-content">
+                                        <div class="news-source">Radar de Mercado</div>
+                                        <h2 class="news-title">${tituloLimpo}</h2>
+                                        <div class="news-date">📅 ${dataFormatada}</div>
+                                        <a href="${noticia.link}" target="_blank" class="news-btn">Ler Matéria Completa</a>
+                                    </div>
+                                </div>`;
+                            caixaDeNoticias.innerHTML += cartaoHTML;
+                        });
+                    } else { caixaDeNoticias.innerHTML = '<div class="loading">Não há atualizações para esta categoria no momento.</div>'; }
+                })
+                .catch(erro => { caixaDeNoticias.innerHTML = '<div class="loading">Houve um erro na ligação ao servidor. Tente novamente.</div>'; });
+        }
+        window.onload = function() { carregarNoticias('ultimas', null); };
+    </script>
+</body>
+</html>
