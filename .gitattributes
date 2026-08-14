@@ -1,0 +1,21 @@
+# Normalização de arquivos de texto
+* text=auto
+
+# Código-fonte
+*.js text eol=lf
+*.json text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.md text eol=lf
+
+# Arquivos de configuração
+.env.example text eol=lf
+
+# Arquivos binários
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.mp4 binary
+*.sqlite binary
