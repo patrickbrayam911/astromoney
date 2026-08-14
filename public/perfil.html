@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASTROMONEY - O Meu Perfil e Diário</title>
+    
+    <!-- LIGAÇÃO AO FICHEIRO CSS GLOBAL -->
+    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        /* =========================================
+           ESTILOS EXCLUSIVOS DESTA PÁGINA (PERFIL)
+           ========================================= */
+        body { 
+            display: flex; flex-direction: column; min-height: 100vh; 
+        }
+
+        .profile-container { max-width: 1000px; margin: 3rem auto; padding: 0 2rem; flex-grow: 1; width: 100%; }
+        
+        /* Cartão de Informações do Utilizador */
+        .user-card { background: linear-gradient(135deg, rgba(15, 20, 35, 0.9), rgba(20, 25, 45, 0.9)); border: 1px solid var(--primary-blue); border-radius: 12px; padding: 2rem; margin-bottom: 3rem; box-shadow: 0 10px 25px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 2rem; }
+        .user-avatar { width: 80px; height: 80px; background-color: var(--primary-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: bold; color: white; box-shadow: 0 0 15px var(--primary-blue); }
+        .user-details h1 { font-size: 2rem; color: var(--text-main); margin-bottom: 0.2rem; }
+        .user-details p { color: var(--neon-blue); font-size: 1rem; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;}
+
+        /* Grelha do Diário de Trades */
+        .trade-journal-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; }
+        
+        @media (max-width: 800px) {
+            .trade-journal-grid { grid-template-columns: 1fr; }
+            .user-card { flex-direction: column; text-align: center; }
+        }
+
+        /* Formulário de Nova Operação */
+        .trade-form-box { background-color: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 2rem; height: fit-content; }
+        .trade-form-box h2 { color: var(--text-main); margin-bottom: 1.5rem; font-size: 1.3rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
+        
+        .input-group { margin-bottom: 1.2rem; }
+        .input-group label { display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-muted); }
+        .input-group input, .input-group select { width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.8rem; border-radius: 8px; outline: none; transition: 0.3s; font-size: 0.95rem; }
+        .input-group input:focus, .input-group select:focus { border-color: var(--primary-blue); box-shadow: 0 0 8px rgba(59, 130, 246, 0.3); }
+
+        .btn-action { width: 100%; background-color: var(--primary-blue); color: white; border: none; padding: 1rem; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s; font-size: 1rem; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); margin-top: 0.5rem; }
+        .btn-action:hover { background-color: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(59, 130, 246, 0.5); }
+
+        /* Lista de Histórico */
+        .trade-history-box { background-color: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 2rem; }
+        .trade-history-box h2 { color: var(--text-main); margin-bottom: 1.5rem; font-size: 1.3rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
+        
+        .trade-list { display: flex; flex-direction: column; gap: 1rem; }
+        .trade-item { display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-color); border: 1px solid var(--border-color); padding: 1.2rem; border-radius: 8px; transition: 0.3s; }
+        .trade-item:hover { border-color: var(--primary-blue); }
+        
+        .trade-info { display: flex; flex-direction: column; gap: 4px; }
+        .trade-asset { font-weight: bold; color: var(--text-main); font-size: 1.1rem; }
+        .trade-details { color: var(--text-muted); font-size: 0.85rem; }
+        
+        .trade-result { font-weight: bold; font-size: 1.2rem; display: flex; flex-direction: column; align-items: flex-end;}
+        .trade-result span { font-size: 0.75rem; font-weight: normal; color: var(--text-muted); }
+        
+        .win { color: #10b981; text-shadow: 0 0 8px rgba(16, 185, 129, 0.4); }
+        .loss { color: #ef4444; text-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
+
+        .btn-delete-trade { background: transparent; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; transition: 0.2s; margin-left: 15px; }
+        .btn-delete-trade:hover { color: #ef4444; transform: scale(1.1); }
+
+        /* Segurança da Conta */
+        .security-section {
+            margin-top: 2rem;
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+        }
+
+        .security-section h2 {
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+            font-size: 1.3rem;
+        }
+
+        .security-description {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        .security-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .security-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-top: 0.5rem;
+        }
+
+        .security-actions .btn-action {
+            width: auto;
+            min-width: 190px;
+        }
+
+        .msg {
+            min-height: 24px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .msg-erro {
+            color: #f87171;
+        }
+
+        .msg-sucesso {
+            color: #34d399;
+        }
+
+        .danger-zone {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .danger-zone h3 {
+            color: #f87171;
+            margin-bottom: 0.5rem;
+            font-size: 1.05rem;
+        }
+
+        .danger-zone p {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .btn-danger {
+            background: transparent;
+            color: #ef4444;
+            border: 1px solid #ef4444;
+            padding: 0.85rem 1.3rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn-danger:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        @media (max-width: 800px) {
+            .security-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .security-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .security-actions .btn-action {
+                width: 100%;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="grafico.html" class="logo">ASTRO<span>MONEY</span></a>
+        <button class="menu-mobile-btn" onclick="alternarMenuMobile()">☰</button>
+        <div class="nav-links">
+            <a href="grafico.html">Gráfico</a>
+            <a href="noticias.html">Notícias</a>
+            <a href="forum.html">Fórum</a>
+            <a href="perfil.html" class="active">Perfil</a>
+            <a href="#" onclick="fazerLogout()" class="btn-login">Sair</a>
+        </div>
+    </nav>
+
+    <main class="profile-container">
+        <!-- ÁREA DO UTILIZADOR -->
+        <div class="user-card">
+            <div class="user-avatar" id="user-initial">A</div>
+            <div class="user-details">
+                <h1 id="user-name">A carregar...</h1>
+                <p id="user-level">Nível de Experiência</p>
+            </div>
+        </div>
+
+        <!-- DIÁRIO DE TRADES -->
+        <div class="trade-journal-grid">
+            
+            <!-- COLUNA ESQUERDA: FORMULÁRIO -->
+            <div class="trade-form-box">
+                <h2>Registar Operação</h2>
+                
+                <div class="input-group">
+                    <label>Ativo (ex: ETH/USD, SOL/USD)</label>
+                    <input type="text" id="trade-asset" placeholder="Símbolo do ativo">
+                </div>
+                
+                <div class="input-group">
+                    <label>Tipo de Ordem</label>
+                    <select id="trade-type">
+                        <option value="Long">Compra (Long)</option>
+                        <option value="Short">Venda (Short)</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label>Preço de Entrada</label>
+                    <input type="number" id="trade-entry" step="0.01" placeholder="0.00">
+                </div>
+                
+                <div class="input-group">
+                    <label>Preço de Saída</label>
+                    <input type="number" id="trade-exit" step="0.01" placeholder="0.00">
+                </div>
+
+                <button class="btn-action" onclick="adicionarTrade()">Salvar Operação</button>
+            </div>
+
+            <!-- COLUNA DIREITA: HISTÓRICO -->
+            <div class="trade-history-box">
+                <h2>Histórico de Diário</h2>
+                <div class="trade-list" id="trade-list-container">
+                    <!-- Trades injetadas via JavaScript -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- SEGURANÇA DA CONTA -->
+        <section class="security-section">
+            <h2>Segurança da Conta</h2>
+            <p class="security-description">
+                Atualize a sua senha de acesso. A senha atual é sempre validada pelo servidor.
+            </p>
+
+            <div class="security-grid">
+                <div class="input-group">
+                    <label for="senha-atual">Senha Atual</label>
+                    <input
+                        type="password"
+                        id="senha-atual"
+                        autocomplete="current-password"
+                        placeholder="Digite a senha atual"
+                    >
+                </div>
+
+                <div class="input-group">
+                    <label for="nova-senha">Nova Senha</label>
+                    <input
+                        type="password"
+                        id="nova-senha"
+                        autocomplete="new-password"
+                        placeholder="Mínimo 8 caracteres"
+                    >
+                </div>
+
+                <div class="input-group">
+                    <label for="confirma-nova-senha">Confirmar Nova Senha</label>
+                    <input
+                        type="password"
+                        id="confirma-nova-senha"
+                        autocomplete="new-password"
+                        placeholder="Repita a nova senha"
+                    >
+                </div>
+            </div>
+
+            <div class="security-actions">
+                <button class="btn-action" type="button" onclick="alterarSenha()">
+                    Atualizar Senha
+                </button>
+            </div>
+
+            <div id="msg-senha" class="msg" aria-live="polite"></div>
+
+            <div class="danger-zone">
+                <h3>Zona de Perigo</h3>
+                <p>
+                    Ao apagar a conta, os seus dados serão removidos permanentemente.
+                    Esta ação não pode ser desfeita.
+                </p>
+
+                <button class="btn-danger" type="button" onclick="apagarConta()">
+                    Apagar a Minha Conta
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- LIGAÇÃO AO CÉREBRO GLOBAL JAVASCRIPT -->
+    <script src="app.js"></script>
+    <script>
+        // ==========================================
+        // ESTADO DO DIÁRIO DE TRADES
+        // ==========================================
+
+        let historicoTrades =
+            JSON.parse(
+                localStorage.getItem('astromoney_trades')
+            ) || [];
+
+
+        // ==========================================
+        // INICIALIZAÇÃO DO PERFIL
+        // ==========================================
+
+        document.addEventListener(
+            'DOMContentLoaded',
+            async () => {
+
+                const usuario =
+                    await protegerPagina();
+
+                if (!usuario) {
+                    return;
+                }
+
+                carregarDadosDoPerfil(usuario);
+                renderizarTrades();
+            }
+        );
+
+
+        // ==========================================
+        // MOSTRAR DADOS DO USUÁRIO
+        // ==========================================
+
+        function carregarDadosDoPerfil(usuario) {
+
+            const nome =
+                usuario.nome || 'Astro Trader';
+
+            const nivel =
+                usuario.nivel || 'não definido';
+
+            document.getElementById(
+                'user-name'
+            ).textContent = nome;
+
+            document.getElementById(
+                'user-initial'
+            ).textContent =
+                nome.charAt(0).toUpperCase();
+
+            document.getElementById(
+                'user-level'
+            ).textContent =
+                'Trader ' + nivel;
+        }
+
+
+        // ==========================================
+        // DESENHAR LISTA DE OPERAÇÕES
+        // ==========================================
+
+        function renderizarTrades() {
+
+            const container =
+                document.getElementById(
+                    'trade-list-container'
+                );
+
+            container.innerHTML = '';
+
+            if (
+                historicoTrades.length === 0
+            ) {
+
+                container.innerHTML =
+                    '<p style="color: var(--text-muted); text-align: center; margin-top: 2rem;">Ainda não registou nenhuma operação. Utilize o formulário ao lado para iniciar o seu diário.</p>';
+
+                return;
+            }
+
+            const tradesReversos =
+                [...historicoTrades].reverse();
+
+            tradesReversos.forEach(
+                trade => {
+
+                    let lucro = false;
+
+                    if (
+                        trade.tipo === 'Long' &&
+                        Number(trade.saida) >
+                        Number(trade.entrada)
+                    ) {
+                        lucro = true;
+                    }
+
+                    if (
+                        trade.tipo === 'Short' &&
+                        Number(trade.entrada) >
+                        Number(trade.saida)
+                    ) {
+                        lucro = true;
+                    }
+
+                    const classeResultado =
+                        lucro ? 'win' : 'loss';
+
+                    const textoResultado =
+                        lucro ? '+ WIN' : '- LOSS';
+
+                    const item =
+                        document.createElement('div');
+
+                    item.className =
+                        'trade-item';
+
+                    const info =
+                        document.createElement('div');
+
+                    info.className =
+                        'trade-info';
+
+                    const ativo =
+                        document.createElement('span');
+
+                    ativo.className =
+                        'trade-asset';
+
+                    ativo.textContent =
+                        `${trade.ativo} (${trade.tipo})`;
+
+                    const detalhes =
+                        document.createElement('span');
+
+                    detalhes.className =
+                        'trade-details';
+
+                    detalhes.textContent =
+                        `${trade.data} | Entrada: $${trade.entrada} ➔ Saída: $${trade.saida}`;
+
+                    info.appendChild(ativo);
+                    info.appendChild(detalhes);
+
+                    const ladoDireito =
+                        document.createElement('div');
+
+                    ladoDireito.style.display =
+                        'flex';
+
+                    ladoDireito.style.alignItems =
+                        'center';
+
+                    const resultado =
+                        document.createElement('div');
+
+                    resultado.className =
+                        `trade-result ${classeResultado}`;
+
+                    resultado.textContent =
+                        textoResultado;
+
+                    const botaoApagar =
+                        document.createElement('button');
+
+                    botaoApagar.className =
+                        'btn-delete-trade';
+
+                    botaoApagar.type =
+                        'button';
+
+                    botaoApagar.title =
+                        'Apagar registo';
+
+                    botaoApagar.textContent =
+                        '×';
+
+                    botaoApagar.addEventListener(
+                        'click',
+                        () => apagarTrade(trade.id)
+                    );
+
+                    ladoDireito.appendChild(
+                        resultado
+                    );
+
+                    ladoDireito.appendChild(
+                        botaoApagar
+                    );
+
+                    item.appendChild(info);
+                    item.appendChild(
+                        ladoDireito
+                    );
+
+                    container.appendChild(item);
+                }
+            );
+        }
+
+
+        // ==========================================
+        // ADICIONAR OPERAÇÃO
+        // ==========================================
+
+        function adicionarTrade() {
+
+            const ativo =
+                document.getElementById(
+                    'trade-asset'
+                ).value.trim().toUpperCase();
+
+            const tipo =
+                document.getElementById(
+                    'trade-type'
+                ).value;
+
+            const entrada =
+                parseFloat(
+                    document.getElementById(
+                        'trade-entry'
+                    ).value
+                );
+
+            const saida =
+                parseFloat(
+                    document.getElementById(
+                        'trade-exit'
+                    ).value
+                );
+
+            if (
+                !ativo ||
+                Number.isNaN(entrada) ||
+                Number.isNaN(saida)
+            ) {
+
+                alert(
+                    'Por favor, preencha todos os campos da operação corretamente.'
+                );
+
+                return;
+            }
+
+            const novaTrade = {
+                id: Date.now(),
+                ativo,
+                tipo,
+                entrada:
+                    entrada.toFixed(2),
+                saida:
+                    saida.toFixed(2),
+                data:
+                    new Date().toLocaleString(
+                        'pt-BR'
+                    )
+            };
+
+            historicoTrades.push(
+                novaTrade
+            );
+
+            localStorage.setItem(
+                'astromoney_trades',
+                JSON.stringify(
+                    historicoTrades
+                )
+            );
+
+            document.getElementById(
+                'trade-asset'
+            ).value = '';
+
+            document.getElementById(
+                'trade-entry'
+            ).value = '';
+
+            document.getElementById(
+                'trade-exit'
+            ).value = '';
+
+            renderizarTrades();
+        }
+
+
+        // ==========================================
+        // APAGAR OPERAÇÃO
+        // ==========================================
+
+        function apagarTrade(idDaTrade) {
+
+            if (
+                !confirm(
+                    'Deseja apagar este registo do seu diário?'
+                )
+            ) {
+                return;
+            }
+
+            historicoTrades =
+                historicoTrades.filter(
+                    trade =>
+                        trade.id !== idDaTrade
+                );
+
+            localStorage.setItem(
+                'astromoney_trades',
+                JSON.stringify(
+                    historicoTrades
+                )
+            );
+
+            renderizarTrades();
+        }
+
+
+        // ==========================================
+        // ALTERAR SENHA
+        // ==========================================
+
+        async function alterarSenha() {
+
+            const senhaAtual =
+                document.getElementById(
+                    'senha-atual'
+                ).value;
+
+            const novaSenha =
+                document.getElementById(
+                    'nova-senha'
+                ).value;
+
+            const confirmaNovaSenha =
+                document.getElementById(
+                    'confirma-nova-senha'
+                ).value;
+
+            const msgBox =
+                document.getElementById(
+                    'msg-senha'
+                );
+
+            msgBox.textContent = '';
+            msgBox.className = 'msg';
+
+            if (
+                !senhaAtual ||
+                !novaSenha ||
+                !confirmaNovaSenha
+            ) {
+
+                msgBox.textContent =
+                    'Preencha todos os campos.';
+
+                msgBox.className =
+                    'msg msg-erro';
+
+                return;
+            }
+
+            if (
+                novaSenha !==
+                confirmaNovaSenha
+            ) {
+
+                msgBox.textContent =
+                    'As novas senhas não coincidem.';
+
+                msgBox.className =
+                    'msg msg-erro';
+
+                return;
+            }
+
+            if (
+                novaSenha.length < 8
+            ) {
+
+                msgBox.textContent =
+                    'A nova senha deve ter pelo menos 8 caracteres.';
+
+                msgBox.className =
+                    'msg msg-erro';
+
+                return;
+            }
+
+            try {
+
+                const resposta =
+                    await fetch(
+                        '/api/users/password',
+                        {
+                            method: 'PUT',
+
+                            headers: {
+                                'Content-Type':
+                                    'application/json'
+                            },
+
+                            body:
+                                JSON.stringify({
+                                    senhaAtual,
+                                    novaSenha
+                                })
+                        }
+                    );
+
+                const dados =
+                    await resposta.json();
+
+                if (!resposta.ok) {
+
+                    msgBox.textContent =
+                        dados.erro ||
+                        'Não foi possível alterar a senha.';
+
+                    msgBox.className =
+                        'msg msg-erro';
+
+                    return;
+                }
+
+                msgBox.textContent =
+                    'Senha alterada com sucesso!';
+
+                msgBox.className =
+                    'msg msg-sucesso';
+
+                document.getElementById(
+                    'senha-atual'
+                ).value = '';
+
+                document.getElementById(
+                    'nova-senha'
+                ).value = '';
+
+                document.getElementById(
+                    'confirma-nova-senha'
+                ).value = '';
+
+            } catch (erro) {
+
+                console.error(
+                    'Erro ao alterar senha:',
+                    erro
+                );
+
+                msgBox.textContent =
+                    'Não foi possível conectar ao servidor.';
+
+                msgBox.className =
+                    'msg msg-erro';
+            }
+        }
+
+
+        // ==========================================
+        // APAGAR CONTA
+        // ==========================================
+
+        async function apagarConta() {
+
+            const confirmacao =
+                confirm(
+                    'Tem certeza que deseja apagar a sua conta? Esta ação não pode ser desfeita.'
+                );
+
+            if (!confirmacao) {
+                return;
+            }
+
+            const confirmacaoFinal =
+                confirm(
+                    'Última confirmação: deseja realmente apagar permanentemente a conta?'
+                );
+
+            if (!confirmacaoFinal) {
+                return;
+            }
+
+            try {
+
+                const resposta =
+                    await fetch(
+                        '/api/users/profile',
+                        {
+                            method: 'DELETE'
+                        }
+                    );
+
+                const dados =
+                    await resposta.json();
+
+                if (!resposta.ok) {
+
+                    alert(
+                        dados.erro ||
+                        'Não foi possível apagar a conta.'
+                    );
+
+                    return;
+                }
+
+                // Limpa apenas dados locais do diário.
+                localStorage.removeItem(
+                    'astromoney_trades'
+                );
+
+                alert(
+                    'Conta apagada com sucesso.'
+                );
+
+                window.location.href =
+                    'astromoney_home.html';
+
+            } catch (erro) {
+
+                console.error(
+                    'Erro ao apagar conta:',
+                    erro
+                );
+
+                alert(
+                    'Não foi possível conectar ao servidor.'
+                );
+            }
+        }
+    </script>
+    
+</body>
+</html>
