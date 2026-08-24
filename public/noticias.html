@@ -67,108 +67,538 @@
     <script src="app.js"></script>
 
     <script>
-        // ==========================================
-        // 1. A SUA CHAVE DE ACESSO (API KEY)
-        // Substitua 'SUA_CHAVE_AQUI' pela chave fornecida pela NewsAPI
-        // ==========================================
-        const MINHA_API_KEY = 'bc8c7a60991b4f05881c7ecacd2ee7bf'; 
+    // ==========================================
+    // ASTROMONEY - RADAR DE NOTÍCIAS
+    // ==========================================
 
-        // 2. Os termos exatos de pesquisa para a API (Queries)
-        const consultasNewsAPI = {
-            'ultimas': 'mercado financeiro OR investimentos',
-            'money': 'economia OR bolsa de valores',
-            'politica': 'política brasil',
-            'agro': 'agronegócio OR agricultura',
-            'ia': 'inteligência artificial OR tecnologia',
-            'infra': 'infraestrutura OR obras'
-        };
 
-        // Mantemos a galeria de reserva caso a API não tenha imagem para um artigo específico
-        const imagensFallback = {
-            'ultimas': ['https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1590283603385-18ff3827fcce?auto=format&fit=crop&w=800&q=80'],
-            'money': ['https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&w=800&q=80'],
-            'politica': ['https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&w=800&q=80'],
-            'agro': ['https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=800&q=80'],
-            'ia': ['https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=800&q=80'],
-            'infra': ['https://images.unsplash.com/photo-1541888087525-076162514de7?auto=format&fit=crop&w=800&q=80']
-        };
+    /**
+     * Imagens utilizadas quando uma notícia
+     * não possuir imagem própria.
+     */
+    const imagensFallback = {
 
-        function carregarNoticias(categoriaId, botaoClicado) {
-            if(botaoClicado) {
-                document.querySelectorAll('.topic-btn').forEach(btn => btn.classList.remove('active'));
-                botaoClicado.classList.add('active');
-            }
-            
-            const caixaDeNoticias = document.getElementById('caixa-de-noticias');
-            caixaDeNoticias.innerHTML = '<div class="loading">A pesquisar os artigos mais recentes...</div>';
+        ultimas: [
+            'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1590283603385-18ff3827fcce?auto=format&fit=crop&w=800&q=80'
+        ],
 
-            const termoPesquisa = encodeURIComponent(consultasNewsAPI[categoriaId]);
-            
-            // Construção do link para a NewsAPI
-            // sortBy=publishedAt garante que as notícias são sempre as mais recentes
-            const urlAPI = `https://newsapi.org/v2/everything?q=${termoPesquisa}&language=pt&sortBy=publishedAt&apiKey=${MINHA_API_KEY}`;
+        money: [
+            'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&w=800&q=80'
+        ],
 
-            fetch(urlAPI)
-                .then(resposta => {
-                    if (!resposta.ok) throw new Error("Erro na requisição. Verifique a sua API Key ou as restrições CORS.");
-                    return resposta.json();
-                })
-                .then(dados => {
-                    caixaDeNoticias.innerHTML = ''; 
-                    
-                    // A NewsAPI guarda as notícias dentro do array "articles"
-                    if(dados.articles && dados.articles.length > 0) {
-                        
-                        let noticiasFiltradas = dados.articles.filter(n => n.title !== "[Removed]"); // Limpa notícias removidas pelos autores
+        politica: [
+            'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&w=800&q=80'
+        ],
 
-                        // O seu filtro de 24 horas inteligente, aplicado como solicitou
-                        if (categoriaId !== 'ultimas') {
-                            const dataDeHoje = new Date(); 
-                            noticiasFiltradas = noticiasFiltradas.filter(noticia => {
-                                const dataDaNoticia = new Date(noticia.publishedAt);
-                                const diferencaEmHoras = (dataDeHoje - dataDaNoticia) / (1000 * 60 * 60);
-                                return diferencaEmHoras >= 24; 
-                            });
+        agro: [
+            'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=800&q=80'
+        ],
 
-                            if (noticiasFiltradas.length === 0) {
-                                noticiasFiltradas = dados.articles.slice(0, 12);
-                            }
-                        }
+        ia: [
+            'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=800&q=80'
+        ],
 
-                        // Criação dos cartões com dados diretos da API
-                        noticiasFiltradas.slice(0, 12).forEach((noticia, index) => {
-                            
-                            // A API profissional já nos dá a imagem e a fonte organizadas!
-                            let imagemEncontrada = noticia.urlToImage || imagensFallback[categoriaId][index % imagensFallback[categoriaId].length];
-                            let dataFormatada = new Date(noticia.publishedAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' });
-                            let fonteOrigem = noticia.source.name || "Portal Financeiro";
+        infra: [
+            'https://images.unsplash.com/photo-1541888087525-076162514de7?auto=format&fit=crop&w=800&q=80'
+        ]
+    };
 
-                            const cartaoHTML = `
-                                <div class="news-card">
-                                    <div class="image-wrapper"><div class="news-image" style="background-image: url('${imagemEncontrada}');"></div></div>
-                                    <div class="news-content">
-                                        <div class="news-source">${fonteOrigem}</div>
-                                        <h2 class="news-title">${noticia.title}</h2>
-                                        <div class="news-date">📅 ${dataFormatada}</div>
-                                        <a href="${noticia.url}" target="_blank" class="news-btn">Ler Matéria Completa</a>
-                                    </div>
-                                </div>`;
-                            caixaDeNoticias.innerHTML += cartaoHTML;
-                        });
-                    } else { 
-                        caixaDeNoticias.innerHTML = '<div class="loading">Nenhuma notícia encontrada no momento.</div>'; 
-                    }
-                })
-                .catch(erro => { 
-                    console.error("Erro detectado:", erro);
-                    caixaDeNoticias.innerHTML = '<div class="loading">Erro ao conectar à API. Se estiver online no GitHub, a NewsAPI pode bloquear requisições gratuitas por CORS. Teste no seu computador local.</div>'; 
-                });
+
+    /**
+     * Remove todos os elementos existentes
+     * dentro de um container.
+     */
+    function limparElemento(elemento) {
+
+        while (elemento.firstChild) {
+
+            elemento.removeChild(
+                elemento.firstChild
+            );
         }
-        
-        window.onload = function() { 
-            if (typeof protegerPagina === "function") { protegerPagina(); }
-            carregarNoticias('ultimas', document.querySelector('.topic-btn.active')); 
-        };
-    </script>
+    }
+
+
+    /**
+     * Exibe uma mensagem dentro da área
+     * destinada às notícias.
+     */
+    function mostrarMensagem(mensagem) {
+
+        const caixaDeNoticias =
+            document.getElementById(
+                'caixa-de-noticias'
+            );
+
+
+        limparElemento(
+            caixaDeNoticias
+        );
+
+
+        const elementoMensagem =
+            document.createElement('div');
+
+
+        elementoMensagem.className =
+            'loading';
+
+
+        // textContent não interpreta HTML.
+        elementoMensagem.textContent =
+            mensagem;
+
+
+        caixaDeNoticias.appendChild(
+            elementoMensagem
+        );
+    }
+
+
+    /**
+     * Formata a data recebida da API
+     * para o padrão brasileiro.
+     */
+    function formatarDataNoticia(data) {
+
+        const objetoData =
+            new Date(data);
+
+
+        if (
+            Number.isNaN(
+                objetoData.getTime()
+            )
+        ) {
+
+            return 'Data não informada';
+        }
+
+
+        return objetoData.toLocaleString(
+            'pt-BR',
+            {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }
+        );
+    }
+
+
+    /**
+     * Verifica se uma URL utiliza HTTP ou HTTPS.
+     *
+     * Isso impede protocolos perigosos
+     * como javascript: em links externos.
+     */
+    function urlPermitida(valor) {
+
+        try {
+
+            const url =
+                new URL(valor);
+
+
+            return (
+                url.protocol === 'http:' ||
+                url.protocol === 'https:'
+            );
+
+        } catch {
+
+            return false;
+        }
+    }
+
+
+    /**
+     * Cria visualmente um card de notícia.
+     *
+     * Em vez de utilizar innerHTML com dados
+     * recebidos de uma API externa, os elementos
+     * são criados com document.createElement().
+     *
+     * Isso reduz o risco de XSS.
+     */
+    function criarCardNoticia(
+        noticia,
+        categoriaId,
+        index
+    ) {
+
+        // ======================================
+        // CARD
+        // ======================================
+
+        const card =
+            document.createElement('article');
+
+
+        card.className =
+            'news-card';
+
+
+        // ======================================
+        // IMAGEM
+        // ======================================
+
+        const imageWrapper =
+            document.createElement('div');
+
+
+        imageWrapper.className =
+            'image-wrapper';
+
+
+        const imagem =
+            document.createElement('div');
+
+
+        imagem.className =
+            'news-image';
+
+
+        const imagensCategoria =
+            imagensFallback[categoriaId] ||
+            imagensFallback.ultimas;
+
+
+        const imagemFallback =
+            imagensCategoria[
+                index %
+                imagensCategoria.length
+            ];
+
+
+        const imagemEscolhida =
+            urlPermitida(noticia.urlToImage)
+                ? noticia.urlToImage
+                : imagemFallback;
+
+
+        imagem.style.backgroundImage =
+            `url("${imagemEscolhida}")`;
+
+
+        imageWrapper.appendChild(
+            imagem
+        );
+
+
+        // ======================================
+        // CONTEÚDO
+        // ======================================
+
+        const conteudo =
+            document.createElement('div');
+
+
+        conteudo.className =
+            'news-content';
+
+
+        // Fonte
+        const fonte =
+            document.createElement('div');
+
+
+        fonte.className =
+            'news-source';
+
+
+        fonte.textContent =
+            noticia.source?.name ||
+            'Portal Financeiro';
+
+
+        // Título
+        const titulo =
+            document.createElement('h2');
+
+
+        titulo.className =
+            'news-title';
+
+
+        titulo.textContent =
+            noticia.title ||
+            'Notícia sem título';
+
+
+        // Data
+        const data =
+            document.createElement('div');
+
+
+        data.className =
+            'news-date';
+
+
+        data.textContent =
+            `📅 ${formatarDataNoticia(
+                noticia.publishedAt
+            )}`;
+
+
+        // Link
+        const link =
+            document.createElement('a');
+
+
+        link.className =
+            'news-btn';
+
+
+        link.textContent =
+            'Ler Matéria Completa';
+
+
+        if (
+            urlPermitida(
+                noticia.url
+            )
+        ) {
+
+            link.href =
+                noticia.url;
+
+
+            link.target =
+                '_blank';
+
+
+            // Evita que a página externa tenha
+            // acesso ao window.opener.
+            link.rel =
+                'noopener noreferrer';
+
+        } else {
+
+            link.removeAttribute(
+                'href'
+            );
+
+
+            link.textContent =
+                'Link indisponível';
+        }
+
+
+        // ======================================
+        // MONTAGEM
+        // ======================================
+
+        conteudo.append(
+            fonte,
+            titulo,
+            data,
+            link
+        );
+
+
+        card.append(
+            imageWrapper,
+            conteudo
+        );
+
+
+        return card;
+    }
+
+
+    /**
+     * Busca as notícias no NOSSO servidor.
+     *
+     * A chave da NewsAPI não existe mais
+     * no navegador.
+     */
+    async function carregarNoticias(
+        categoriaId,
+        botaoClicado
+    ) {
+
+        // Atualiza visualmente o botão ativo.
+        if (botaoClicado) {
+
+            document
+                .querySelectorAll(
+                    '.topic-btn'
+                )
+                .forEach(botao => {
+
+                    botao.classList.remove(
+                        'active'
+                    );
+                });
+
+
+            botaoClicado.classList.add(
+                'active'
+            );
+        }
+
+
+        mostrarMensagem(
+            'A pesquisar os artigos mais recentes...'
+        );
+
+
+        try {
+
+            // Agora chamamos somente nosso backend.
+            const resposta =
+                await fetch(
+                    `/api/noticias?categoria=${encodeURIComponent(
+                        categoriaId
+                    )}`
+                );
+
+
+            // Sessão expirada.
+            if (
+                resposta.status === 401
+            ) {
+
+                window.location.href =
+                    'login.html';
+
+                return;
+            }
+
+
+            const dados =
+                await resposta.json();
+
+
+            if (!resposta.ok) {
+
+                throw new Error(
+                    dados.erro ||
+                    'Não foi possível carregar as notícias.'
+                );
+            }
+
+
+            const artigos =
+                Array.isArray(
+                    dados.artigos
+                )
+                    ? dados.artigos
+                    : [];
+
+
+            // Remove artigos inválidos ou
+            // removidos pela fonte.
+            let noticiasFiltradas =
+                artigos.filter(
+                    noticia => {
+
+                        return (
+                            noticia &&
+                            noticia.title &&
+                            noticia.title !==
+                            '[Removed]'
+                        );
+                    }
+                );
+
+
+            if (
+                noticiasFiltradas.length === 0
+            ) {
+
+                mostrarMensagem(
+                    'Nenhuma notícia encontrada no momento.'
+                );
+
+                return;
+            }
+
+
+            const caixaDeNoticias =
+                document.getElementById(
+                    'caixa-de-noticias'
+                );
+
+
+            limparElemento(
+                caixaDeNoticias
+            );
+
+
+            // Mostra no máximo 12 notícias.
+            noticiasFiltradas
+                .slice(0, 12)
+                .forEach(
+                    (noticia, index) => {
+
+                        const card =
+                            criarCardNoticia(
+                                noticia,
+                                categoriaId,
+                                index
+                            );
+
+
+                        caixaDeNoticias.appendChild(
+                            card
+                        );
+                    }
+                );
+
+
+        } catch (erro) {
+
+            console.error(
+                'Erro ao carregar notícias:',
+                erro
+            );
+
+
+            mostrarMensagem(
+                'Não foi possível carregar as notícias. Tente novamente em alguns instantes.'
+            );
+        }
+    }
+
+
+    // ==========================================
+    // INICIALIZAÇÃO
+    // ==========================================
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        async () => {
+
+            // Primeiro verificamos se existe
+            // uma sessão válida.
+            const usuario =
+                await protegerPagina();
+
+
+            if (!usuario) {
+
+                return;
+            }
+
+
+            const botaoInicial =
+                document.querySelector(
+                    '.topic-btn.active'
+                );
+
+
+            await carregarNoticias(
+                'ultimas',
+                botaoInicial
+            );
+        }
+    );
+</script>
 </body>
 </html>

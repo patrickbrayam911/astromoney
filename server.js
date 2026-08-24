@@ -1393,6 +1393,151 @@ app.delete(
     }
 );
 
+// ==========================================
+// NOTÍCIAS - NEWSAPI
+// ==========================================
+
+/**
+ * Termos permitidos para pesquisa de notícias.
+ *
+ * A categoria recebida pelo navegador é convertida
+ * em uma consulta definida pelo próprio servidor.
+ *
+ * Isso evita permitir que qualquer texto arbitrário
+ * seja enviado diretamente para a API externa.
+ */
+const consultasNoticias = {
+    ultimas: 'mercado financeiro OR investimentos',
+    money: 'economia OR bolsa de valores',
+    politica: 'política brasil',
+    agro: 'agronegócio OR agricultura',
+    ia: 'inteligência artificial OR tecnologia',
+    infra: 'infraestrutura OR obras'
+};
+
+
+/**
+ * GET /api/noticias
+ *
+ * Busca notícias através da NewsAPI sem expor
+ * a chave privada para o navegador.
+ *
+ * Exemplo:
+ *
+ * /api/noticias?categoria=money
+ */
+app.get(
+    '/api/noticias',
+    exigirLogin,
+    async (req, res) => {
+
+        try {
+
+            // Categoria enviada pelo frontend.
+            const categoria =
+                req.query.categoria || 'ultimas';
+
+
+            // Verifica se a categoria existe
+            // na nossa lista permitida.
+            const consulta =
+                consultasNoticias[categoria];
+
+
+            if (!consulta) {
+
+                return res.status(400).json({
+                    erro:
+                        'Categoria de notícias inválida.'
+                });
+            }
+
+
+            // A chave fica somente no servidor.
+            const apiKey =
+                process.env.NEWS_API_KEY;
+
+
+            if (!apiKey) {
+
+                console.error(
+                    'NEWS_API_KEY não foi configurada no arquivo .env.'
+                );
+
+                return res.status(500).json({
+                    erro:
+                        'Serviço de notícias não configurado.'
+                });
+            }
+
+
+            // URLSearchParams monta os parâmetros
+            // da URL de forma segura e legível.
+            const parametros =
+                new URLSearchParams({
+                    q: consulta,
+                    language: 'pt',
+                    sortBy: 'publishedAt',
+                    pageSize: '30',
+                    apiKey: apiKey
+                });
+
+
+            const urlNewsAPI =
+                `https://newsapi.org/v2/everything?${parametros.toString()}`;
+
+
+            // Node.js moderno possui fetch nativo.
+            const respostaNewsAPI =
+                await fetch(urlNewsAPI);
+
+
+            if (!respostaNewsAPI.ok) {
+
+                console.error(
+                    'Erro NewsAPI:',
+                    respostaNewsAPI.status
+                );
+
+                return res.status(502).json({
+                    erro:
+                        'Não foi possível consultar o serviço de notícias.'
+                });
+            }
+
+
+            const dados =
+                await respostaNewsAPI.json();
+
+
+            // Evitamos devolver dados desnecessários
+            // recebidos da API externa.
+            const artigos =
+                Array.isArray(dados.articles)
+                    ? dados.articles
+                    : [];
+
+
+            return res.json({
+                categoria,
+                artigos
+            });
+
+        } catch (erro) {
+
+            console.error(
+                'Erro ao buscar notícias:',
+                erro
+            );
+
+
+            return res.status(500).json({
+                erro:
+                    'Erro interno ao carregar notícias.'
+            });
+        }
+    }
+);
 
 // ==========================================
 // 404 API
