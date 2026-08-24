@@ -1,19 +1,62 @@
-# Dependências
+# ============================================
+# ASTROMONEY - ARQUIVOS IGNORADOS PELO GIT
+# ============================================
+
+
+# --------------------------------------------
+# DEPENDÊNCIAS
+# --------------------------------------------
+
+# Geradas novamente através de "npm install".
 node_modules/
 
-# Variáveis de ambiente
+
+# --------------------------------------------
+# VARIÁVEIS DE AMBIENTE
+# --------------------------------------------
+
+# Contém chaves e configurações privadas.
 .env
-.env.local
 
-# Banco de dados local
+# Permite versionar explicitamente o modelo.
+!.env.example
+
+
+# --------------------------------------------
+# BANCO DE DADOS LOCAL
+# --------------------------------------------
+
+# Banco SQLite utilizado localmente.
 database.sqlite
-*.sqlite-journal
-*.sqlite-shm
-*.sqlite-wal
+database.sqlite-shm
+database.sqlite-wal
 
-# Logs
+
+# --------------------------------------------
+# LOGS
+# --------------------------------------------
+
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Sistema operacional
-.DS_Store
+
+# --------------------------------------------
+# SISTEMA OPERACIONAL
+# --------------------------------------------
+
+# Windows
 Thumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+
+
+# --------------------------------------------
+# EDITORES / IDEs
+# --------------------------------------------
+
+.vscode/
+.idea/
