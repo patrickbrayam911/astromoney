@@ -16,34 +16,124 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
-// ==========================================
+
+// ======================================================
 // MIDDLEWARES
-// ==========================================
+// ======================================================
 
-app.use(express.json());
-
-app.use(express.urlencoded({
-    extended: true
+/**
+ * Permite receber JSON.
+ * O limite evita corpos de requisição excessivamente grandes.
+ */
+app.use(express.json({
+    limit: '100kb'
 }));
 
+/**
+ * Permite receber formulários HTML tradicionais.
+ */
+app.use(express.urlencoded({
+    extended: true,
+    limit: '100kb'
+}));
+
+/**
+ * Permite ler cookies enviados pelo navegador.
+ */
 app.use(cookieParser());
 
-// Servir os seus HTML, CSS, JS, vídeo etc.
-app.use(express.static(
-    path.join(__dirname, 'public')
-));
 
-// ==========================================
+// ======================================================
+// FRONTEND - ARQUIVOS ESTÁTICOS
+// ======================================================
+
+/**
+ * Disponibiliza os arquivos existentes dentro de /public.
+ *
+ * Exemplos:
+ *
+ * public/index.html
+ * -> http://localhost:3000/
+ *
+ * public/noticias.html
+ * -> http://localhost:3000/noticias.html
+ *
+ * public/css/style.css
+ * -> http://localhost:3000/css/style.css
+ *
+ * IMPORTANTE:
+ * express.static procura automaticamente por index.html
+ * quando o navegador acessa "/".
+ */
+app.use(
+    express.static(
+        path.join(__dirname, 'public')
+    )
+);
+
+
+// ======================================================
+// FUNÇÕES AUXILIARES DE VALIDAÇÃO
+// ======================================================
+
+/**
+ * Verifica se determinado valor é uma string.
+ *
+ * @param {*} valor
+ * @returns {boolean}
+ */
+function ehString(valor) {
+    return typeof valor === 'string';
+}
+
+
+/**
+ * Faz uma validação básica de endereço de e-mail.
+ *
+ * @param {string} email
+ * @returns {boolean}
+ */
+function emailValido(email) {
+    if (!ehString(email)) {
+        return false;
+    }
+
+    const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    return regexEmail.test(email);
+}
+
+
+/**
+ * Verifica se determinado valor representa
+ * um número inteiro positivo.
+ *
+ * @param {*} valor
+ * @returns {boolean}
+ */
+function idValido(valor) {
+    const id = Number(valor);
+
+    return Number.isInteger(id) && id > 0;
+}
+
+
+// ======================================================
 // CONFIGURAÇÃO DE SESSÃO
-// ==========================================
+// ======================================================
 
 const SESSION_COOKIE = 'astromoney_session';
 
 const SESSION_DURATION =
-    1000 * 60 * 60 * 24 * 7;
+    1000 * 60 * 60 * 24 * 7; // 7 dias
 
-// 7 dias
 
+/**
+ * Cria uma sessão para o usuário autenticado.
+ *
+ * @param {number} userId
+ * @param {object} res
+ */
 function criarSessao(userId, res) {
     const sessionId = generateSessionId();
 
@@ -68,7 +158,6 @@ function criarSessao(userId, res) {
         sessionId,
         {
             httpOnly: true,
-
             sameSite: 'strict',
 
             secure:
@@ -79,10 +168,17 @@ function criarSessao(userId, res) {
     );
 }
 
-// ==========================================
-// BUSCAR USUÁRIO DA SESSÃO
-// ==========================================
 
+// ======================================================
+// OBTER USUÁRIO DA SESSÃO
+// ======================================================
+
+/**
+ * Procura o usuário associado ao cookie de sessão.
+ *
+ * @param {object} req
+ * @returns {object|null}
+ */
 function obterUsuarioDaSessao(req) {
     const sessionId =
         req.cookies[SESSION_COOKIE];
@@ -114,9 +210,10 @@ function obterUsuarioDaSessao(req) {
         return null;
     }
 
-    // Sessão expirada
+    /**
+     * Remove automaticamente uma sessão expirada.
+     */
     if (sessao.expires_at < Date.now()) {
-
         db.prepare(`
             DELETE FROM sessions
             WHERE id = ?
@@ -134,10 +231,14 @@ function obterUsuarioDaSessao(req) {
     };
 }
 
-// ==========================================
-// MIDDLEWARE PARA ROTAS PROTEGIDAS
-// ==========================================
 
+// ======================================================
+// MIDDLEWARE DE AUTENTICAÇÃO
+// ======================================================
+
+/**
+ * Protege endpoints que exigem usuário autenticado.
+ */
 function exigirLogin(req, res, next) {
     const usuario =
         obterUsuarioDaSessao(req);
@@ -153,13 +254,13 @@ function exigirLogin(req, res, next) {
     next();
 }
 
-// ==========================================
+
+// ======================================================
 // REGISTRO
-// ==========================================
+// ======================================================
 
 app.post('/api/auth/register', async (req, res) => {
     try {
-
         let {
             nome,
             telefone,
@@ -168,18 +269,51 @@ app.post('/api/auth/register', async (req, res) => {
             senha
         } = req.body;
 
-        nome = nome?.trim();
+        // ------------------------------
+        // Normalização
+        // ------------------------------
 
-        telefone = telefone?.trim();
+        nome =
+            ehString(nome)
+                ? nome.trim()
+                : nome;
+
+        telefone =
+            ehString(telefone)
+                ? telefone.trim()
+                : telefone;
 
         email =
-            email?.trim().toLowerCase();
+            ehString(email)
+                ? email.trim().toLowerCase()
+                : email;
 
-        nivel = nivel?.trim();
+        nivel =
+            ehString(nivel)
+                ? nivel.trim().toLowerCase()
+                : nivel;
 
-        // ==================================
-        // VALIDAÇÕES
-        // ==================================
+
+        // ------------------------------
+        // Validação dos tipos
+        // ------------------------------
+
+        if (
+            !ehString(nome) ||
+            !ehString(email) ||
+            !ehString(nivel) ||
+            !ehString(senha)
+        ) {
+            return res.status(400).json({
+                erro:
+                    'Os dados enviados possuem formato inválido.'
+            });
+        }
+
+
+        // ------------------------------
+        // Campos obrigatórios
+        // ------------------------------
 
         if (
             !nome ||
@@ -193,25 +327,99 @@ app.post('/api/auth/register', async (req, res) => {
             });
         }
 
-        if (senha.length < 8) {
+
+        // ------------------------------
+        // Nome
+        // ------------------------------
+
+        if (
+            nome.length < 2 ||
+            nome.length > 100
+        ) {
             return res.status(400).json({
                 erro:
-                    'A senha deve possuir pelo menos 8 caracteres.'
+                    'O nome deve possuir entre 2 e 100 caracteres.'
+            });
+        }
+
+
+        // ------------------------------
+        // E-mail
+        // ------------------------------
+
+        if (
+            email.length > 254 ||
+            !emailValido(email)
+        ) {
+            return res.status(400).json({
+                erro:
+                    'Informe um endereço de e-mail válido.'
+            });
+        }
+
+
+        // ------------------------------
+        // Telefone
+        // ------------------------------
+
+        if (
+            telefone !== undefined &&
+            telefone !== null &&
+            !ehString(telefone)
+        ) {
+            return res.status(400).json({
+                erro:
+                    'Informe um telefone válido.'
             });
         }
 
         if (
-            ![
-                'novato',
-                'regular',
-                'profissional'
-            ].includes(nivel)
+            telefone &&
+            telefone.length > 30
         ) {
+            return res.status(400).json({
+                erro:
+                    'Informe um telefone válido.'
+            });
+        }
+
+
+        // ------------------------------
+        // Senha
+        // ------------------------------
+
+        if (
+            senha.length < 8 ||
+            senha.length > 128
+        ) {
+            return res.status(400).json({
+                erro:
+                    'A senha deve possuir entre 8 e 128 caracteres.'
+            });
+        }
+
+
+        // ------------------------------
+        // Nível
+        // ------------------------------
+
+        const niveisPermitidos = [
+            'novato',
+            'regular',
+            'profissional'
+        ];
+
+        if (!niveisPermitidos.includes(nivel)) {
             return res.status(400).json({
                 erro:
                     'Nível de experiência inválido.'
             });
         }
+
+
+        // ------------------------------
+        // Verificar e-mail existente
+        // ------------------------------
 
         const usuarioExistente =
             db.prepare(`
@@ -227,16 +435,18 @@ app.post('/api/auth/register', async (req, res) => {
             });
         }
 
-        // ==================================
-        // HASH DA SENHA
-        // ==================================
+
+        // ------------------------------
+        // Hash da senha
+        // ------------------------------
 
         const passwordHash =
             await hashPassword(senha);
 
-        // ==================================
-        // INSERT
-        // ==================================
+
+        // ------------------------------
+        // Inserção
+        // ------------------------------
 
         const resultado =
             db.prepare(`
@@ -270,8 +480,10 @@ app.post('/api/auth/register', async (req, res) => {
         });
 
     } catch (erro) {
-
-        console.error(erro);
+        console.error(
+            'Erro ao criar conta:',
+            erro
+        );
 
         return res.status(500).json({
             erro:
@@ -280,20 +492,34 @@ app.post('/api/auth/register', async (req, res) => {
     }
 });
 
-// ==========================================
+
+// ======================================================
 // LOGIN
-// ==========================================
+// ======================================================
 
 app.post('/api/auth/login', async (req, res) => {
     try {
-
         let {
             email,
             senha
         } = req.body;
 
         email =
-            email?.trim().toLowerCase();
+            ehString(email)
+                ? email.trim().toLowerCase()
+                : email;
+
+
+        if (
+            !ehString(email) ||
+            !ehString(senha)
+        ) {
+            return res.status(400).json({
+                erro:
+                    'E-mail ou senha possuem formato inválido.'
+            });
+        }
+
 
         if (!email || !senha) {
             return res.status(400).json({
@@ -302,6 +528,29 @@ app.post('/api/auth/login', async (req, res) => {
             });
         }
 
+
+        if (
+            email.length > 254 ||
+            !emailValido(email)
+        ) {
+            return res.status(400).json({
+                erro:
+                    'Informe um endereço de e-mail válido.'
+            });
+        }
+
+
+        if (
+            senha.length < 1 ||
+            senha.length > 128
+        ) {
+            return res.status(400).json({
+                erro:
+                    'E-mail ou senha possuem formato inválido.'
+            });
+        }
+
+
         const usuario =
             db.prepare(`
                 SELECT *
@@ -309,14 +558,20 @@ app.post('/api/auth/login', async (req, res) => {
                 WHERE email = ?
             `).get(email);
 
-        // Mensagem genérica:
-        // evita revelar se determinado e-mail existe.
+
+        /**
+         * Mensagem propositalmente genérica.
+         *
+         * Isso evita revelar se determinado
+         * endereço possui uma conta cadastrada.
+         */
         if (!usuario) {
             return res.status(401).json({
                 erro:
                     'E-mail ou senha incorretos.'
             });
         }
+
 
         const senhaCorreta =
             await verifyPassword(
@@ -331,16 +586,22 @@ app.post('/api/auth/login', async (req, res) => {
             });
         }
 
-        // Remove sessões antigas daquele usuário.
+
+        /**
+         * Remove sessões anteriores antes
+         * de criar a nova sessão.
+         */
         db.prepare(`
             DELETE FROM sessions
             WHERE user_id = ?
         `).run(usuario.id);
 
+
         criarSessao(
             usuario.id,
             res
         );
+
 
         return res.json({
             mensagem:
@@ -356,8 +617,10 @@ app.post('/api/auth/login', async (req, res) => {
         });
 
     } catch (erro) {
-
-        console.error(erro);
+        console.error(
+            'Erro durante login:',
+            erro
+        );
 
         return res.status(500).json({
             erro:
@@ -366,47 +629,50 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
-// ==========================================
+
+// ======================================================
 // CONSULTAR SESSÃO
-// ==========================================
+// ======================================================
 
 app.get(
     '/api/auth/me',
     exigirLogin,
     (req, res) => {
-
         return res.json({
             usuario: req.user
         });
     }
 );
 
-// ==========================================
+
+// ======================================================
 // LOGOUT
-// ==========================================
+// ======================================================
 
 app.post('/api/auth/logout', (req, res) => {
-
     const sessionId =
         req.cookies[SESSION_COOKIE];
 
     if (sessionId) {
-
         db.prepare(`
             DELETE FROM sessions
             WHERE id = ?
         `).run(sessionId);
     }
 
+
     res.clearCookie(
         SESSION_COOKIE,
         {
             httpOnly: true,
             sameSite: 'strict',
+
             secure:
-                process.env.NODE_ENV === 'production'
+                process.env.NODE_ENV ===
+                'production'
         }
     );
+
 
     return res.json({
         mensagem:
@@ -414,97 +680,113 @@ app.post('/api/auth/logout', (req, res) => {
     });
 });
 
-// ==========================================
-// ROTA DE TESTE PROTEGIDA
-// ==========================================
+
+// ======================================================
+// ROTA PROTEGIDA DE TESTE
+// ======================================================
 
 app.get(
     '/api/teste-protegido',
     exigirLogin,
     (req, res) => {
-
-        res.json({
+        return res.json({
             mensagem:
                 `Olá, ${req.user.nome}. Esta rota é protegida.`
         });
     }
 );
 
-// ==========================================
-// PERFIL DO USUÁRIO
-// ==========================================
+
+// ======================================================
+// PERFIL
+// ======================================================
 
 app.get(
     '/api/users/profile',
     exigirLogin,
     (req, res) => {
-
         return res.json({
             usuario: req.user
         });
     }
 );
 
-// ==========================================
+
+// ======================================================
 // ALTERAR SENHA
-// ==========================================
+// ======================================================
 
 app.put(
     '/api/users/password',
     exigirLogin,
     async (req, res) => {
-
         try {
-
             const {
                 senhaAtual,
                 novaSenha
             } = req.body;
 
-            // ==================================
-            // VALIDAÇÃO
-            // ==================================
 
-            if (!senhaAtual || !novaSenha) {
+            if (
+                !ehString(senhaAtual) ||
+                !ehString(novaSenha)
+            ) {
+                return res.status(400).json({
+                    erro:
+                        'As senhas enviadas possuem formato inválido.'
+                });
+            }
 
+
+            if (
+                !senhaAtual ||
+                !novaSenha
+            ) {
                 return res.status(400).json({
                     erro:
                         'Informe a senha atual e a nova senha.'
                 });
             }
 
-            if (novaSenha.length < 8) {
 
+            if (senhaAtual.length > 128) {
                 return res.status(400).json({
                     erro:
-                        'A nova senha deve possuir pelo menos 8 caracteres.'
+                        'A senha atual possui formato inválido.'
                 });
             }
 
-            // ==================================
-            // BUSCAR HASH ATUAL
-            // ==================================
+
+            if (
+                novaSenha.length < 8 ||
+                novaSenha.length > 128
+            ) {
+                return res.status(400).json({
+                    erro:
+                        'A nova senha deve possuir entre 8 e 128 caracteres.'
+                });
+            }
+
 
             const usuario =
                 db.prepare(`
                     SELECT
                         id,
                         password_hash
+
                     FROM users
+
                     WHERE id = ?
                 `).get(req.user.id);
 
-            if (!usuario) {
 
+            if (!usuario) {
                 return res.status(404).json({
                     erro:
                         'Usuário não encontrado.'
                 });
             }
 
-            // ==================================
-            // VERIFICAR SENHA ATUAL
-            // ==================================
 
             const senhaCorreta =
                 await verifyPassword(
@@ -512,17 +794,14 @@ app.put(
                     usuario.password_hash
                 );
 
-            if (!senhaCorreta) {
 
+            if (!senhaCorreta) {
                 return res.status(401).json({
                     erro:
                         'A senha atual está incorreta.'
                 });
             }
 
-            // ==================================
-            // NÃO ACEITAR A MESMA SENHA
-            // ==================================
 
             const mesmaSenha =
                 await verifyPassword(
@@ -530,44 +809,39 @@ app.put(
                     usuario.password_hash
                 );
 
-            if (mesmaSenha) {
 
+            if (mesmaSenha) {
                 return res.status(400).json({
                     erro:
                         'A nova senha deve ser diferente da senha atual.'
                 });
             }
 
-            // ==================================
-            // GERAR NOVO HASH
-            // ==================================
 
             const novoHash =
                 await hashPassword(
                     novaSenha
                 );
 
-            // ==================================
-            // ATUALIZAR BANCO
-            // ==================================
 
             db.prepare(`
                 UPDATE users
+
                 SET password_hash = ?
+
                 WHERE id = ?
             `).run(
                 novoHash,
                 req.user.id
             );
 
-            // ==================================
-            // ENCERRAR OUTRAS SESSÕES
-            // ==================================
 
+            /**
+             * Encerra todas as outras sessões,
+             * mantendo apenas a sessão atual.
+             */
             const sessionId =
-                req.cookies[
-                    SESSION_COOKIE
-                ];
+                req.cookies[SESSION_COOKIE];
 
             db.prepare(`
                 DELETE FROM sessions
@@ -579,13 +853,13 @@ app.put(
                 sessionId
             );
 
+
             return res.json({
                 mensagem:
                     'Senha alterada com sucesso.'
             });
 
         } catch (erro) {
-
             console.error(
                 'Erro ao alterar senha:',
                 erro
@@ -599,25 +873,19 @@ app.put(
     }
 );
 
-// ==========================================
+
+// ======================================================
 // APAGAR CONTA
-// ==========================================
+// ======================================================
 
 app.delete(
     '/api/users/profile',
     exigirLogin,
     (req, res) => {
-
         try {
-
             const userId =
                 req.user.id;
 
-            // Como configuramos
-            // ON DELETE CASCADE,
-            // sessões, posts e comentários
-            // ligados ao usuário também
-            // poderão ser removidos.
 
             const resultado =
                 db.prepare(`
@@ -625,31 +893,27 @@ app.delete(
                     WHERE id = ?
                 `).run(userId);
 
-            if (
-                resultado.changes === 0
-            ) {
 
+            if (resultado.changes === 0) {
                 return res.status(404).json({
                     erro:
                         'Usuário não encontrado.'
                 });
             }
 
-            // Remove o cookie do navegador
 
             res.clearCookie(
                 SESSION_COOKIE,
                 {
                     httpOnly: true,
-
-                    sameSite:
-                        'strict',
+                    sameSite: 'strict',
 
                     secure:
-                        process.env.NODE_ENV
-                        === 'production'
+                        process.env.NODE_ENV ===
+                        'production'
                 }
             );
+
 
             return res.json({
                 mensagem:
@@ -657,7 +921,6 @@ app.delete(
             });
 
         } catch (erro) {
-
             console.error(
                 'Erro ao apagar conta:',
                 erro
@@ -671,17 +934,16 @@ app.delete(
     }
 );
 
-// ==========================================
+
+// ======================================================
 // FÓRUM - LISTAR PUBLICAÇÕES
-// ==========================================
+// ======================================================
 
 app.get(
     '/api/posts',
     exigirLogin,
     (req, res) => {
-
         try {
-
             const posts =
                 db.prepare(`
                     SELECT
@@ -690,13 +952,13 @@ app.get(
                         posts.title,
                         posts.content,
                         posts.created_at,
+
                         users.nome AS autor
 
                     FROM posts
 
                     INNER JOIN users
-                        ON users.id =
-                           posts.user_id
+                        ON users.id = posts.user_id
 
                     ORDER BY
                         posts.created_at DESC,
@@ -712,16 +974,15 @@ app.get(
                         comments.user_id,
                         comments.content,
                         comments.created_at,
+
                         users.nome AS autor
 
                     FROM comments
 
                     INNER JOIN users
-                        ON users.id =
-                           comments.user_id
+                        ON users.id = comments.user_id
 
-                    WHERE
-                        comments.post_id = ?
+                    WHERE comments.post_id = ?
 
                     ORDER BY
                         comments.created_at ASC,
@@ -730,12 +991,12 @@ app.get(
 
 
             const resultado =
-                posts.map(post => {
-
+                posts.map((post) => {
                     const comentarios =
                         buscarComentarios.all(
                             post.id
                         );
+
 
                     return {
                         id: post.id,
@@ -761,7 +1022,7 @@ app.get(
 
                         comentarios:
                             comentarios.map(
-                                comentario => ({
+                                (comentario) => ({
                                     id:
                                         comentario.id,
 
@@ -794,7 +1055,6 @@ app.get(
             });
 
         } catch (erro) {
-
             console.error(
                 'Erro ao carregar fórum:',
                 erro
@@ -807,29 +1067,42 @@ app.get(
         }
     }
 );
-// ==========================================
+
+
+// ======================================================
 // FÓRUM - CRIAR PUBLICAÇÃO
-// ==========================================
+// ======================================================
 
 app.post(
     '/api/posts',
     exigirLogin,
     (req, res) => {
-
         try {
-
-            const titulo =
-                req.body.titulo?.trim();
-
-            const conteudo =
-                req.body.conteudo?.trim();
+            const {
+                titulo: tituloRecebido,
+                conteudo: conteudoRecebido
+            } = req.body;
 
 
             if (
-                !titulo ||
-                !conteudo
+                !ehString(tituloRecebido) ||
+                !ehString(conteudoRecebido)
             ) {
+                return res.status(400).json({
+                    erro:
+                        'Título ou conteúdo possuem formato inválido.'
+                });
+            }
 
+
+            const titulo =
+                tituloRecebido.trim();
+
+            const conteudo =
+                conteudoRecebido.trim();
+
+
+            if (!titulo || !conteudo) {
                 return res.status(400).json({
                     erro:
                         'Informe o título e o conteúdo.'
@@ -838,7 +1111,6 @@ app.post(
 
 
             if (titulo.length > 150) {
-
                 return res.status(400).json({
                     erro:
                         'O título pode possuir no máximo 150 caracteres.'
@@ -847,7 +1119,6 @@ app.post(
 
 
             if (conteudo.length > 10000) {
-
                 return res.status(400).json({
                     erro:
                         'A publicação é muito grande.'
@@ -862,7 +1133,6 @@ app.post(
                         title,
                         content
                     )
-
                     VALUES (?, ?, ?)
                 `).run(
                     req.user.id,
@@ -880,7 +1150,6 @@ app.post(
             });
 
         } catch (erro) {
-
             console.error(
                 'Erro ao publicar:',
                 erro
@@ -893,31 +1162,18 @@ app.post(
         }
     }
 );
-// ==========================================
+
+
+// ======================================================
 // FÓRUM - EDITAR PUBLICAÇÃO
-// ==========================================
+// ======================================================
 
 app.put(
     '/api/posts/:id',
     exigirLogin,
     (req, res) => {
-
         try {
-
-            const postId =
-                Number(req.params.id);
-
-            const titulo =
-                req.body.titulo?.trim();
-
-            const conteudo =
-                req.body.conteudo?.trim();
-
-
-            if (
-                !Number.isInteger(postId)
-            ) {
-
+            if (!idValido(req.params.id)) {
                 return res.status(400).json({
                     erro:
                         'Publicação inválida.'
@@ -925,14 +1181,54 @@ app.put(
             }
 
 
-            if (
-                !titulo ||
-                !conteudo
-            ) {
+            const postId =
+                Number(req.params.id);
 
+
+            const {
+                titulo: tituloRecebido,
+                conteudo: conteudoRecebido
+            } = req.body;
+
+
+            if (
+                !ehString(tituloRecebido) ||
+                !ehString(conteudoRecebido)
+            ) {
+                return res.status(400).json({
+                    erro:
+                        'Título ou conteúdo possuem formato inválido.'
+                });
+            }
+
+
+            const titulo =
+                tituloRecebido.trim();
+
+            const conteudo =
+                conteudoRecebido.trim();
+
+
+            if (!titulo || !conteudo) {
                 return res.status(400).json({
                     erro:
                         'Título e conteúdo são obrigatórios.'
+                });
+            }
+
+
+            if (titulo.length > 150) {
+                return res.status(400).json({
+                    erro:
+                        'O título pode possuir no máximo 150 caracteres.'
+                });
+            }
+
+
+            if (conteudo.length > 10000) {
+                return res.status(400).json({
+                    erro:
+                        'A publicação é muito grande.'
                 });
             }
 
@@ -950,7 +1246,6 @@ app.put(
 
 
             if (!post) {
-
                 return res.status(404).json({
                     erro:
                         'Publicação não encontrada.'
@@ -958,11 +1253,7 @@ app.put(
             }
 
 
-            if (
-                post.user_id !==
-                req.user.id
-            ) {
-
+            if (post.user_id !== req.user.id) {
                 return res.status(403).json({
                     erro:
                         'Você não pode editar esta publicação.'
@@ -991,7 +1282,6 @@ app.put(
             });
 
         } catch (erro) {
-
             console.error(
                 'Erro ao editar publicação:',
                 erro
@@ -1005,30 +1295,26 @@ app.put(
     }
 );
 
-// ==========================================
+
+// ======================================================
 // FÓRUM - APAGAR PUBLICAÇÃO
-// ==========================================
+// ======================================================
 
 app.delete(
     '/api/posts/:id',
     exigirLogin,
     (req, res) => {
-
         try {
-
-            const postId =
-                Number(req.params.id);
-
-
-            if (
-                !Number.isInteger(postId)
-            ) {
-
+            if (!idValido(req.params.id)) {
                 return res.status(400).json({
                     erro:
                         'Publicação inválida.'
                 });
             }
+
+
+            const postId =
+                Number(req.params.id);
 
 
             const post =
@@ -1044,7 +1330,6 @@ app.delete(
 
 
             if (!post) {
-
                 return res.status(404).json({
                     erro:
                         'Publicação não encontrada.'
@@ -1052,11 +1337,7 @@ app.delete(
             }
 
 
-            if (
-                post.user_id !==
-                req.user.id
-            ) {
-
+            if (post.user_id !== req.user.id) {
                 return res.status(403).json({
                     erro:
                         'Você não pode apagar esta publicação.'
@@ -1076,7 +1357,6 @@ app.delete(
             });
 
         } catch (erro) {
-
             console.error(
                 'Erro ao apagar publicação:',
                 erro
@@ -1090,30 +1370,17 @@ app.delete(
     }
 );
 
-// ==========================================
+
+// ======================================================
 // FÓRUM - CRIAR COMENTÁRIO
-// ==========================================
+// ======================================================
 
 app.post(
     '/api/posts/:postId/comments',
     exigirLogin,
     (req, res) => {
-
         try {
-
-            const postId =
-                Number(
-                    req.params.postId
-                );
-
-            const texto =
-                req.body.texto?.trim();
-
-
-            if (
-                !Number.isInteger(postId)
-            ) {
-
+            if (!idValido(req.params.postId)) {
                 return res.status(400).json({
                     erro:
                         'Publicação inválida.'
@@ -1121,8 +1388,27 @@ app.post(
             }
 
 
-            if (!texto) {
+            const postId =
+                Number(req.params.postId);
 
+
+            const textoRecebido =
+                req.body.texto;
+
+
+            if (!ehString(textoRecebido)) {
+                return res.status(400).json({
+                    erro:
+                        'O comentário possui formato inválido.'
+                });
+            }
+
+
+            const texto =
+                textoRecebido.trim();
+
+
+            if (!texto) {
                 return res.status(400).json({
                     erro:
                         'O comentário não pode ficar vazio.'
@@ -1131,7 +1417,6 @@ app.post(
 
 
             if (texto.length > 2000) {
-
                 return res.status(400).json({
                     erro:
                         'O comentário é muito grande.'
@@ -1148,7 +1433,6 @@ app.post(
 
 
             if (!post) {
-
                 return res.status(404).json({
                     erro:
                         'Publicação não encontrada.'
@@ -1163,7 +1447,6 @@ app.post(
                         user_id,
                         content
                     )
-
                     VALUES (?, ?, ?)
                 `).run(
                     postId,
@@ -1181,7 +1464,6 @@ app.post(
             });
 
         } catch (erro) {
-
             console.error(
                 'Erro ao comentar:',
                 erro
@@ -1195,30 +1477,17 @@ app.post(
     }
 );
 
-// ==========================================
+
+// ======================================================
 // FÓRUM - EDITAR COMENTÁRIO
-// ==========================================
+// ======================================================
 
 app.put(
     '/api/comments/:id',
     exigirLogin,
     (req, res) => {
-
         try {
-
-            const comentarioId =
-                Number(req.params.id);
-
-            const texto =
-                req.body.texto?.trim();
-
-
-            if (
-                !Number.isInteger(
-                    comentarioId
-                )
-            ) {
-
+            if (!idValido(req.params.id)) {
                 return res.status(400).json({
                     erro:
                         'Comentário inválido.'
@@ -1226,11 +1495,38 @@ app.put(
             }
 
 
-            if (!texto) {
+            const comentarioId =
+                Number(req.params.id);
 
+
+            const textoRecebido =
+                req.body.texto;
+
+
+            if (!ehString(textoRecebido)) {
+                return res.status(400).json({
+                    erro:
+                        'O comentário possui formato inválido.'
+                });
+            }
+
+
+            const texto =
+                textoRecebido.trim();
+
+
+            if (!texto) {
                 return res.status(400).json({
                     erro:
                         'O comentário não pode ficar vazio.'
+                });
+            }
+
+
+            if (texto.length > 2000) {
+                return res.status(400).json({
+                    erro:
+                        'O comentário é muito grande.'
                 });
             }
 
@@ -1244,13 +1540,10 @@ app.put(
                     FROM comments
 
                     WHERE id = ?
-                `).get(
-                    comentarioId
-                );
+                `).get(comentarioId);
 
 
             if (!comentario) {
-
                 return res.status(404).json({
                     erro:
                         'Comentário não encontrado.'
@@ -1262,7 +1555,6 @@ app.put(
                 comentario.user_id !==
                 req.user.id
             ) {
-
                 return res.status(403).json({
                     erro:
                         'Você não pode editar este comentário.'
@@ -1288,7 +1580,6 @@ app.put(
             });
 
         } catch (erro) {
-
             console.error(
                 'Erro ao editar comentário:',
                 erro
@@ -1302,32 +1593,26 @@ app.put(
     }
 );
 
-// ==========================================
+
+// ======================================================
 // FÓRUM - APAGAR COMENTÁRIO
-// ==========================================
+// ======================================================
 
 app.delete(
     '/api/comments/:id',
     exigirLogin,
     (req, res) => {
-
         try {
-
-            const comentarioId =
-                Number(req.params.id);
-
-
-            if (
-                !Number.isInteger(
-                    comentarioId
-                )
-            ) {
-
+            if (!idValido(req.params.id)) {
                 return res.status(400).json({
                     erro:
                         'Comentário inválido.'
                 });
             }
+
+
+            const comentarioId =
+                Number(req.params.id);
 
 
             const comentario =
@@ -1339,13 +1624,10 @@ app.delete(
                     FROM comments
 
                     WHERE id = ?
-                `).get(
-                    comentarioId
-                );
+                `).get(comentarioId);
 
 
             if (!comentario) {
-
                 return res.status(404).json({
                     erro:
                         'Comentário não encontrado.'
@@ -1357,7 +1639,6 @@ app.delete(
                 comentario.user_id !==
                 req.user.id
             ) {
-
                 return res.status(403).json({
                     erro:
                         'Você não pode apagar este comentário.'
@@ -1368,9 +1649,7 @@ app.delete(
             db.prepare(`
                 DELETE FROM comments
                 WHERE id = ?
-            `).run(
-                comentarioId
-            );
+            `).run(comentarioId);
 
 
             return res.json({
@@ -1379,7 +1658,6 @@ app.delete(
             });
 
         } catch (erro) {
-
             console.error(
                 'Erro ao apagar comentário:',
                 erro
@@ -1393,59 +1671,59 @@ app.delete(
     }
 );
 
-// ==========================================
+
+// ======================================================
 // NOTÍCIAS - NEWSAPI
-// ==========================================
+// ======================================================
 
 /**
- * Termos permitidos para pesquisa de notícias.
+ * Categorias aceitas pelo backend.
  *
- * A categoria recebida pelo navegador é convertida
- * em uma consulta definida pelo próprio servidor.
- *
- * Isso evita permitir que qualquer texto arbitrário
- * seja enviado diretamente para a API externa.
+ * O frontend envia somente o nome da categoria.
+ * A consulta real da NewsAPI permanece definida
+ * no servidor.
  */
 const consultasNoticias = {
-    ultimas: 'mercado financeiro OR investimentos',
-    money: 'economia OR bolsa de valores',
-    politica: 'política brasil',
-    agro: 'agronegócio OR agricultura',
-    ia: 'inteligência artificial OR tecnologia',
-    infra: 'infraestrutura OR obras'
+    ultimas:
+        'mercado financeiro OR investimentos',
+
+    money:
+        'economia OR bolsa de valores',
+
+    politica:
+        'política brasil',
+
+    agro:
+        'agronegócio OR agricultura',
+
+    ia:
+        'inteligência artificial OR tecnologia',
+
+    infra:
+        'infraestrutura OR obras'
 };
 
 
-/**
- * GET /api/noticias
- *
- * Busca notícias através da NewsAPI sem expor
- * a chave privada para o navegador.
- *
- * Exemplo:
- *
- * /api/noticias?categoria=money
- */
+// ======================================================
+// BUSCAR NOTÍCIAS
+// ======================================================
+
 app.get(
     '/api/noticias',
     exigirLogin,
     async (req, res) => {
-
         try {
+            const categoriaRecebida =
+                req.query.categoria;
 
-            // Categoria enviada pelo frontend.
+
             const categoria =
-                req.query.categoria || 'ultimas';
+                categoriaRecebida === undefined
+                    ? 'ultimas'
+                    : categoriaRecebida;
 
 
-            // Verifica se a categoria existe
-            // na nossa lista permitida.
-            const consulta =
-                consultasNoticias[categoria];
-
-
-            if (!consulta) {
-
+            if (!ehString(categoria)) {
                 return res.status(400).json({
                     erro:
                         'Categoria de notícias inválida.'
@@ -1453,13 +1731,29 @@ app.get(
             }
 
 
-            // A chave fica somente no servidor.
+            const consulta =
+                consultasNoticias[categoria];
+
+
+            if (!consulta) {
+                return res.status(400).json({
+                    erro:
+                        'Categoria de notícias inválida.'
+                });
+            }
+
+
+            /**
+             * A chave é obtida exclusivamente
+             * através do ambiente do servidor.
+             *
+             * Ela nunca deve ficar no frontend.
+             */
             const apiKey =
                 process.env.NEWS_API_KEY;
 
 
             if (!apiKey) {
-
                 console.error(
                     'NEWS_API_KEY não foi configurada no arquivo .env.'
                 );
@@ -1471,15 +1765,13 @@ app.get(
             }
 
 
-            // URLSearchParams monta os parâmetros
-            // da URL de forma segura e legível.
             const parametros =
                 new URLSearchParams({
                     q: consulta,
                     language: 'pt',
                     sortBy: 'publishedAt',
                     pageSize: '30',
-                    apiKey: apiKey
+                    apiKey
                 });
 
 
@@ -1487,13 +1779,11 @@ app.get(
                 `https://newsapi.org/v2/everything?${parametros.toString()}`;
 
 
-            // Node.js moderno possui fetch nativo.
             const respostaNewsAPI =
                 await fetch(urlNewsAPI);
 
 
             if (!respostaNewsAPI.ok) {
-
                 console.error(
                     'Erro NewsAPI:',
                     respostaNewsAPI.status
@@ -1510,8 +1800,6 @@ app.get(
                 await respostaNewsAPI.json();
 
 
-            // Evitamos devolver dados desnecessários
-            // recebidos da API externa.
             const artigos =
                 Array.isArray(dados.articles)
                     ? dados.articles
@@ -1524,12 +1812,10 @@ app.get(
             });
 
         } catch (erro) {
-
             console.error(
                 'Erro ao buscar notícias:',
                 erro
             );
-
 
             return res.status(500).json({
                 erro:
@@ -1539,26 +1825,31 @@ app.get(
     }
 );
 
-// ==========================================
-// 404 API
-// ==========================================
 
+// ======================================================
+// 404 PARA ENDPOINTS DA API
+// ======================================================
+
+/**
+ * Deve permanecer DEPOIS de todas as rotas /api.
+ *
+ * Assim qualquer endpoint inexistente recebe
+ * JSON em vez de uma página HTML.
+ */
 app.use('/api', (req, res) => {
-
-    res.status(404).json({
+    return res.status(404).json({
         erro:
             'Endpoint não encontrado.'
     });
 });
 
-// ==========================================
+
+// ======================================================
 // INICIAR SERVIDOR
-// ==========================================
+// ======================================================
 
 app.listen(PORT, () => {
-
     console.log(
         `ASTROMONEY rodando em http://localhost:${PORT}`
     );
 });
-
