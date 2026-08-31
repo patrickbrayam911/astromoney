@@ -249,42 +249,136 @@
             `;
         }
 
-        function buscarNoticias(nomeAtivo) {
-            document.getElementById('titulo-noticias').innerText = "Últimas sobre " + nomeAtivo;
-            const caixaNoticias = document.getElementById('lista-noticias');
-            caixaNoticias.innerHTML = '<div class="news-item">A comunicar com os servidores da NewsAPI...</div>';
+function criarCardNoticia(noticia) {
+    const card = document.createElement('div');
+    card.className = 'news-item';
 
-            const MINHA_API_KEY = 'bc8c7a60991b4f05881c7ecacd2ee7bf'; 
-            const ativoLimpo = nomeAtivo.split(' (')[0]; 
-            const termoBusca = encodeURIComponent(ativoLimpo);
-            const urlAPI = `https://newsapi.org/v2/everything?q=${termoBusca}&language=pt&sortBy=publishedAt&apiKey=${MINHA_API_KEY}`;
+    const titulo = document.createElement('strong');
+    titulo.textContent =
+        noticia.title || 'Notícia sem título';
 
-            fetch(urlAPI)
-                .then(resposta => {
-                    if (!resposta.ok) throw new Error("Erro na API");
-                    return resposta.json();
-                })
-                .then(dados => {
-                    caixaNoticias.innerHTML = ''; 
-                    if(dados.articles && dados.articles.length > 0) {
-                        let noticiasValidas = dados.articles.filter(n => n.title !== "[Removed]");
-                        noticiasValidas.slice(0, 4).forEach(noticia => {
-                            caixaNoticias.innerHTML += `
-                                <div class="news-item">
-                                    <strong>${noticia.title}</strong>
-                                    <a href="${noticia.url}" target="_blank" class="news-link">Ler notícia original ➤</a>
-                                </div>
-                            `;
-                        });
-                    } else {
-                        caixaNoticias.innerHTML = '<div class="news-item">O mercado está calmo. Não foram encontradas notícias recentes para este ativo.</div>';
-                    }
-                })
-                .catch(erro => {
-                    console.error(erro);
-                    caixaNoticias.innerHTML = '<div class="news-item">Não foi possível ligar aos servidores. (Restrição CORS ou Chave Inválida).</div>';
-                });
+    card.appendChild(titulo);
+
+    try {
+        const endereco = new URL(noticia.url);
+
+        const protocoloPermitido =
+            endereco.protocol === 'https:' ||
+            endereco.protocol === 'http:';
+
+        if (!protocoloPermitido) {
+            throw new Error('Protocolo não permitido');
         }
+
+        const link = document.createElement('a');
+
+        link.href = endereco.href;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.className = 'news-link';
+        link.textContent =
+            'Ler notícia original ➤';
+
+        card.appendChild(link);
+
+    } catch {
+        const linkIndisponivel =
+            document.createElement('span');
+
+        linkIndisponivel.className = 'news-link';
+        linkIndisponivel.textContent =
+            'Link indisponível';
+
+        card.appendChild(linkIndisponivel);
+    }
+
+    return card;
+}
+
+        async function buscarNoticias(nomeAtivo) {
+    const tituloNoticias =
+        document.getElementById('titulo-noticias');
+
+    const caixaNoticias =
+        document.getElementById('lista-noticias');
+
+    tituloNoticias.textContent =
+        `Últimas notícias do mercado — ${nomeAtivo}`;
+
+    caixaNoticias.replaceChildren();
+
+    const carregando = document.createElement('div');
+    carregando.className = 'news-item';
+    carregando.textContent =
+        'Consultando o serviço de notícias...';
+
+    caixaNoticias.appendChild(carregando);
+
+    try {
+        const resposta = await fetch(
+            '/api/noticias?categoria=ultimas'
+        );
+
+        const dados = await resposta.json();
+
+        if (!resposta.ok) {
+            throw new Error(
+                dados.erro ||
+                'Não foi possível consultar as notícias.'
+            );
+        }
+
+        caixaNoticias.replaceChildren();
+
+        const artigos = Array.isArray(dados.artigos)
+            ? dados.artigos
+            : [];
+
+        const artigosValidos = artigos
+            .filter(artigo => {
+                return (
+                    artigo &&
+                    artigo.title &&
+                    artigo.title !== '[Removed]'
+                );
+            })
+            .slice(0, 4);
+
+        if (artigosValidos.length === 0) {
+            const vazio = document.createElement('div');
+
+            vazio.className = 'news-item';
+            vazio.textContent =
+                'Nenhuma notícia recente foi encontrada.';
+
+            caixaNoticias.appendChild(vazio);
+            return;
+        }
+
+        artigosValidos.forEach(artigo => {
+            caixaNoticias.appendChild(
+                criarCardNoticia(artigo)
+            );
+        });
+
+    } catch (erro) {
+        console.error(
+            'Erro ao buscar notícias:',
+            erro
+        );
+
+        caixaNoticias.replaceChildren();
+
+        const mensagem = document.createElement('div');
+
+        mensagem.className = 'news-item';
+        mensagem.textContent =
+            erro.message ||
+            'Não foi possível carregar as notícias.';
+
+        caixaNoticias.appendChild(mensagem);
+    }
+}
 
         function mudarGrafico(novoSimbolo, botaoClicado, nomeAtivo) {
             desenharGrafico(novoSimbolo); 
