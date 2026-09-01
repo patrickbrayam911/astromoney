@@ -30,6 +30,8 @@ node_modules/
 database.sqlite
 database.sqlite-shm
 database.sqlite-wal
+# Backups locais do banco
+*.backup.sqlitegit
 
 
 # --------------------------------------------
@@ -59,4 +61,4 @@ Desktop.ini
 # --------------------------------------------
 
 .vscode/
-.idea/
+.idea/database.backup.sqlite

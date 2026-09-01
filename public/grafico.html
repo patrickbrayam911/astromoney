@@ -70,6 +70,7 @@
         .ai-input:focus { border-color: var(--primary-blue); }
         .btn-enviar { background-color: var(--primary-blue); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         .btn-enviar:hover { background-color: var(--primary-hover); transform: scale(1.05); }
+        .ai-demo-notice { margin: 0 1rem 0.75rem; padding: 0.75rem; border: 1px solid #f59e0b; border-radius: 0.5rem; color: #fde68a; background: rgba(245, 158, 11, 0.12); font-size: 0.85rem; line-height: 1.4; }
         
         .news-header { padding: 1rem; border-bottom: 1px solid var(--border-color); font-weight: bold; color: var(--primary-blue); font-size: 0.9rem; text-align: center; }
         .news-list { padding: 1rem; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 1rem; }
@@ -170,16 +171,34 @@
             </div>
             
             <div id="painel-ia" class="panel active-panel">
-                <div class="ai-chat-history" id="chat-history">
-                    <div class="balao balao-ia">Olá! O meu cérebro visual está pronto. Como posso ajudar com a sua estratégia?</div>
+                <p class="ai-demo-notice" role="note">
+                    Ambiente demonstrativo: este assistente ainda não produz análises financeiras reais.
+                </p>
+                <div class="ai-chat-history" id="chat-history" aria-live="polite">
+                    <div class="balao balao-ia">Olá! Este é um assistente demonstrativo. Como posso ajudar?</div>
                 </div>
                 <div class="ai-suggestions">
                     <button class="btn-sugestao" onclick="usarSugestao('Quais são os suportes chave nos 15m?')">Suportes chave nos 15m?</button>
                     <button class="btn-sugestao" onclick="usarSugestao('Resuma a volatilidade atual deste ativo.')">Resuma a volatilidade atual.</button>
                 </div>
                 <div class="ai-input-area">
-                    <input type="text" id="campo-ia" class="ai-input" placeholder="Pergunte à IA..." onkeypress="verificarEnter(event)">
-                    <button class="btn-enviar" onclick="enviarMensagem()">➤</button>
+                    <input
+                        type="text"
+                        id="campo-ia"
+                        class="ai-input"
+                        placeholder="Digite uma pergunta..."
+                        maxlength="1000"
+                        autocomplete="off"
+                        aria-label="Mensagem para o assistente demonstrativo"
+                    >
+                    <button
+                        id="botao-enviar-ia"
+                        class="btn-enviar"
+                        type="button"
+                        aria-label="Enviar mensagem"
+                    >
+                        ➤
+                    </button>
                 </div>
             </div>
 
@@ -249,136 +268,96 @@
             `;
         }
 
-function criarCardNoticia(noticia) {
-    const card = document.createElement('div');
-    card.className = 'news-item';
+        function criarCardNoticia(noticia) {
+            const card = document.createElement('div');
+            card.className = 'news-item';
 
-    const titulo = document.createElement('strong');
-    titulo.textContent =
-        noticia.title || 'Notícia sem título';
+            const titulo = document.createElement('strong');
+            titulo.textContent = noticia.title || 'Notícia sem título';
+            card.appendChild(titulo);
 
-    card.appendChild(titulo);
+            try {
+                const endereco = new URL(noticia.url);
+                const protocoloPermitido =
+                    endereco.protocol === 'https:' ||
+                    endereco.protocol === 'http:';
 
-    try {
-        const endereco = new URL(noticia.url);
+                if (!protocoloPermitido) {
+                    throw new Error('Protocolo não permitido');
+                }
 
-        const protocoloPermitido =
-            endereco.protocol === 'https:' ||
-            endereco.protocol === 'http:';
+                const link = document.createElement('a');
+                link.href = endereco.href;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.className = 'news-link';
+                link.textContent = 'Ler notícia original ➤';
+                card.appendChild(link);
+            } catch {
+                const linkIndisponivel = document.createElement('span');
+                linkIndisponivel.className = 'news-link';
+                linkIndisponivel.textContent = 'Link indisponível';
+                card.appendChild(linkIndisponivel);
+            }
 
-        if (!protocoloPermitido) {
-            throw new Error('Protocolo não permitido');
+            return card;
         }
-
-        const link = document.createElement('a');
-
-        link.href = endereco.href;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.className = 'news-link';
-        link.textContent =
-            'Ler notícia original ➤';
-
-        card.appendChild(link);
-
-    } catch {
-        const linkIndisponivel =
-            document.createElement('span');
-
-        linkIndisponivel.className = 'news-link';
-        linkIndisponivel.textContent =
-            'Link indisponível';
-
-        card.appendChild(linkIndisponivel);
-    }
-
-    return card;
-}
 
         async function buscarNoticias(nomeAtivo) {
-    const tituloNoticias =
-        document.getElementById('titulo-noticias');
+            const tituloNoticias = document.getElementById('titulo-noticias');
+            const caixaNoticias = document.getElementById('lista-noticias');
 
-    const caixaNoticias =
-        document.getElementById('lista-noticias');
+            tituloNoticias.textContent = `Últimas notícias do mercado — ${nomeAtivo}`;
+            caixaNoticias.replaceChildren();
 
-    tituloNoticias.textContent =
-        `Últimas notícias do mercado — ${nomeAtivo}`;
+            const carregando = document.createElement('div');
+            carregando.className = 'news-item';
+            carregando.textContent = 'Consultando o serviço de notícias...';
+            caixaNoticias.appendChild(carregando);
 
-    caixaNoticias.replaceChildren();
+            try {
+                const resposta = await fetch('/api/noticias?categoria=ultimas');
+                const dados = await resposta.json();
 
-    const carregando = document.createElement('div');
-    carregando.className = 'news-item';
-    carregando.textContent =
-        'Consultando o serviço de notícias...';
+                if (!resposta.ok) {
+                    throw new Error(
+                        dados.erro || 'Não foi possível consultar as notícias.'
+                    );
+                }
 
-    caixaNoticias.appendChild(carregando);
+                caixaNoticias.replaceChildren();
 
-    try {
-        const resposta = await fetch(
-            '/api/noticias?categoria=ultimas'
-        );
+                const artigos = Array.isArray(dados.artigos) ? dados.artigos : [];
+                const artigosValidos = artigos
+                    .filter(artigo =>
+                        artigo &&
+                        artigo.title &&
+                        artigo.title !== '[Removed]'
+                    )
+                    .slice(0, 4);
 
-        const dados = await resposta.json();
+                if (artigosValidos.length === 0) {
+                    const vazio = document.createElement('div');
+                    vazio.className = 'news-item';
+                    vazio.textContent = 'Nenhuma notícia recente foi encontrada.';
+                    caixaNoticias.appendChild(vazio);
+                    return;
+                }
 
-        if (!resposta.ok) {
-            throw new Error(
-                dados.erro ||
-                'Não foi possível consultar as notícias.'
-            );
+                artigosValidos.forEach(artigo => {
+                    caixaNoticias.appendChild(criarCardNoticia(artigo));
+                });
+            } catch (erro) {
+                console.error('Erro ao buscar notícias:', erro);
+                caixaNoticias.replaceChildren();
+
+                const mensagem = document.createElement('div');
+                mensagem.className = 'news-item';
+                mensagem.textContent =
+                    erro.message || 'Não foi possível carregar as notícias.';
+                caixaNoticias.appendChild(mensagem);
+            }
         }
-
-        caixaNoticias.replaceChildren();
-
-        const artigos = Array.isArray(dados.artigos)
-            ? dados.artigos
-            : [];
-
-        const artigosValidos = artigos
-            .filter(artigo => {
-                return (
-                    artigo &&
-                    artigo.title &&
-                    artigo.title !== '[Removed]'
-                );
-            })
-            .slice(0, 4);
-
-        if (artigosValidos.length === 0) {
-            const vazio = document.createElement('div');
-
-            vazio.className = 'news-item';
-            vazio.textContent =
-                'Nenhuma notícia recente foi encontrada.';
-
-            caixaNoticias.appendChild(vazio);
-            return;
-        }
-
-        artigosValidos.forEach(artigo => {
-            caixaNoticias.appendChild(
-                criarCardNoticia(artigo)
-            );
-        });
-
-    } catch (erro) {
-        console.error(
-            'Erro ao buscar notícias:',
-            erro
-        );
-
-        caixaNoticias.replaceChildren();
-
-        const mensagem = document.createElement('div');
-
-        mensagem.className = 'news-item';
-        mensagem.textContent =
-            erro.message ||
-            'Não foi possível carregar as notícias.';
-
-        caixaNoticias.appendChild(mensagem);
-    }
-}
 
         function mudarGrafico(novoSimbolo, botaoClicado, nomeAtivo) {
             desenharGrafico(novoSimbolo); 
@@ -403,24 +382,70 @@ function criarCardNoticia(noticia) {
 
         const campoInput = document.getElementById('campo-ia');
         const historico = document.getElementById('chat-history');
+        const botaoEnviar = document.getElementById('botao-enviar-ia');
 
-        function usarSugestao(texto) { campoInput.value = texto; enviarMensagem(); }
-        function verificarEnter(evento) { if (evento.key === "Enter") enviarMensagem(); }
+        function adicionarMensagemChat(tipo, texto) {
+            const mensagem = document.createElement('div');
+            const classesPermitidas = {
+                usuario: 'balao-user',
+                assistente: 'balao-ia'
+            };
+
+            const classe = classesPermitidas[tipo];
+
+            if (!classe) {
+                throw new Error('Tipo de mensagem inválido.');
+            }
+
+            mensagem.classList.add('balao', classe);
+            mensagem.textContent = texto;
+            historico.appendChild(mensagem);
+            historico.scrollTop = historico.scrollHeight;
+        }
+
+        function usarSugestao(texto) {
+            campoInput.value = texto;
+            enviarMensagem();
+        }
 
         function enviarMensagem() {
-            const mensagemUser = campoInput.value.trim();
-            if (mensagemUser === "") return;
+            const mensagemUsuario = campoInput.value.trim();
 
-            historico.innerHTML += `<div class="balao balao-user">${mensagemUser}</div>`;
-            campoInput.value = ""; 
-            historico.scrollTop = historico.scrollHeight;
+            if (!mensagemUsuario) {
+                return;
+            }
 
-            setTimeout(() => {
-                let respostaSimulada = "ASTRO AI: De momento sou um assistente visual. A minha ligação à rede neuronal Gemini será estabelecida em breve para analisar '" + mensagemUser + "'.";
-                historico.innerHTML += `<div class="balao balao-ia">${respostaSimulada}</div>`;
-                historico.scrollTop = historico.scrollHeight;
-            }, 1000);
+            const LIMITE_MENSAGEM = 1000;
+
+            if (mensagemUsuario.length > LIMITE_MENSAGEM) {
+                adicionarMensagemChat(
+                    'assistente',
+                    `A mensagem pode possuir no máximo ${LIMITE_MENSAGEM} caracteres.`
+                );
+                return;
+            }
+
+            adicionarMensagemChat('usuario', mensagemUsuario);
+            campoInput.value = '';
+            campoInput.focus();
+
+            window.setTimeout(() => {
+                adicionarMensagemChat(
+                    'assistente',
+                    'Demonstração: o assistente de IA ainda não está conectado. ' +
+                    'Nenhuma análise financeira real foi realizada.'
+                );
+            }, 500);
         }
+
+        botaoEnviar.addEventListener('click', enviarMensagem);
+
+        campoInput.addEventListener('keydown', evento => {
+            if (evento.key === 'Enter' && !evento.isComposing) {
+                evento.preventDefault();
+                enviarMensagem();
+            }
+        });
 
         window.onload = function() { 
             if (typeof protegerPagina === "function") { protegerPagina(); }

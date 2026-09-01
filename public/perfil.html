@@ -208,9 +208,9 @@
                 <div class="input-group">
                     <label>Tipo de Ordem</label>
                     <select id="trade-type">
-                        <option value="Long">Compra (Long)</option>
-                        <option value="Short">Venda (Short)</option>
-                    </select>
+    <option value="compra">Compra (Long)</option>
+    <option value="venda">Venda (Short)</option>
+</select>
                 </div>
                 
                 <div class="input-group">
@@ -223,7 +223,13 @@
                     <input type="number" id="trade-exit" step="0.01" placeholder="0.00">
                 </div>
 
-                <button class="btn-action" onclick="adicionarTrade()">Salvar Operação</button>
+                <button
+    id="botao-salvar-trade"
+    class="btn-action"
+    type="button"
+>
+    Salvar Operação
+</button>
             </div>
 
             <!-- COLUNA DIREITA: HISTÓRICO -->
@@ -305,10 +311,7 @@
         // ESTADO DO DIÁRIO DE TRADES
         // ==========================================
 
-        let historicoTrades =
-            JSON.parse(
-                localStorage.getItem('astromoney_trades')
-            ) || [];
+       let historicoTrades = [];
 
 
         // ==========================================
@@ -327,7 +330,7 @@
                 }
 
                 carregarDadosDoPerfil(usuario);
-                renderizarTrades();
+await carregarTrades();
             }
         );
 
@@ -364,6 +367,75 @@
         // DESENHAR LISTA DE OPERAÇÕES
         // ==========================================
 
+
+async function carregarTrades() {
+    const container =
+        document.getElementById(
+            'trade-list-container'
+        );
+
+    container.replaceChildren();
+
+    const carregando =
+        document.createElement('p');
+
+    carregando.textContent =
+        'A carregar o diário...';
+
+    carregando.style.color =
+        'var(--text-muted)';
+
+    carregando.style.textAlign =
+        'center';
+
+    container.appendChild(carregando);
+
+    try {
+        const resposta =
+            await fetch('/api/trades');
+
+        const dados =
+            await resposta.json();
+
+        if (!resposta.ok) {
+            throw new Error(
+                dados.erro ||
+                'Não foi possível carregar o diário.'
+            );
+        }
+
+        historicoTrades =
+            Array.isArray(dados.trades)
+                ? dados.trades
+                : [];
+
+        renderizarTrades();
+
+    } catch (erro) {
+        console.error(
+            'Erro ao carregar trades:',
+            erro
+        );
+
+        container.replaceChildren();
+
+        const mensagem =
+            document.createElement('p');
+
+        mensagem.textContent =
+            erro.message ||
+            'Não foi possível carregar o diário.';
+
+        mensagem.style.color =
+            '#ef4444';
+
+        mensagem.style.textAlign =
+            'center';
+
+        container.appendChild(mensagem);
+    }
+}
+
         function renderizarTrades() {
 
             const container =
@@ -371,28 +443,39 @@
                     'trade-list-container'
                 );
 
-            container.innerHTML = '';
+            container.replaceChildren();
 
             if (
                 historicoTrades.length === 0
             ) {
 
-                container.innerHTML =
-                    '<p style="color: var(--text-muted); text-align: center; margin-top: 2rem;">Ainda não registou nenhuma operação. Utilize o formulário ao lado para iniciar o seu diário.</p>';
+               const vazio =
+    document.createElement('p');
+
+vazio.textContent =
+    'Ainda não registou nenhuma operação. Utilize o formulário ao lado para iniciar o seu diário.';
+
+vazio.style.color =
+    'var(--text-muted)';
+
+vazio.style.textAlign =
+    'center';
+
+vazio.style.marginTop =
+    '2rem';
+
+container.appendChild(vazio);
 
                 return;
             }
 
-            const tradesReversos =
-                [...historicoTrades].reverse();
-
-            tradesReversos.forEach(
+            historicoTrades.forEach(
                 trade => {
 
                     let lucro = false;
 
                     if (
-                        trade.tipo === 'Long' &&
+                        trade.tipo === 'compra' &&
                         Number(trade.saida) >
                         Number(trade.entrada)
                     ) {
@@ -400,7 +483,7 @@
                     }
 
                     if (
-                        trade.tipo === 'Short' &&
+                        trade.tipo === 'venda' &&
                         Number(trade.entrada) >
                         Number(trade.saida)
                     ) {
@@ -425,6 +508,11 @@
                     info.className =
                         'trade-info';
 
+                        const nomeTipo =
+    trade.tipo === 'compra'
+        ? 'Compra (Long)'
+        : 'Venda (Short)';
+
                     const ativo =
                         document.createElement('span');
 
@@ -432,7 +520,17 @@
                         'trade-asset';
 
                     ativo.textContent =
-                        `${trade.ativo} (${trade.tipo})`;
+    `${trade.ativo} — ${nomeTipo}`;
+
+    const dataFormatada =
+    trade.data
+        ? new Date(
+            trade.data.replace(
+                ' ',
+                'T'
+            ) + 'Z'
+        ).toLocaleString('pt-BR')
+        : 'Data indisponível';
 
                     const detalhes =
                         document.createElement('span');
@@ -441,7 +539,7 @@
                         'trade-details';
 
                     detalhes.textContent =
-                        `${trade.data} | Entrada: $${trade.entrada} ➔ Saída: $${trade.saida}`;
+    `${dataFormatada} | Entrada: $${Number(trade.entrada).toFixed(2)} ➔ Saída: $${Number(trade.saida).toFixed(2)}`;
 
                     info.appendChild(ativo);
                     info.appendChild(detalhes);
@@ -507,115 +605,174 @@
         // ADICIONAR OPERAÇÃO
         // ==========================================
 
-        function adicionarTrade() {
+        async function adicionarTrade() {
+    const campoAtivo =
+        document.getElementById(
+            'trade-asset'
+        );
 
-            const ativo =
-                document.getElementById(
-                    'trade-asset'
-                ).value.trim().toUpperCase();
+    const campoTipo =
+        document.getElementById(
+            'trade-type'
+        );
 
-            const tipo =
-                document.getElementById(
-                    'trade-type'
-                ).value;
+    const campoEntrada =
+        document.getElementById(
+            'trade-entry'
+        );
 
-            const entrada =
-                parseFloat(
-                    document.getElementById(
-                        'trade-entry'
-                    ).value
-                );
+    const campoSaida =
+        document.getElementById(
+            'trade-exit'
+        );
 
-            const saida =
-                parseFloat(
-                    document.getElementById(
-                        'trade-exit'
-                    ).value
-                );
+    const botaoSalvar =
+        document.getElementById(
+            'botao-salvar-trade'
+        );
 
-            if (
-                !ativo ||
-                Number.isNaN(entrada) ||
-                Number.isNaN(saida)
-            ) {
+    const ativo =
+        campoAtivo.value
+            .trim()
+            .toUpperCase();
 
-                alert(
-                    'Por favor, preencha todos os campos da operação corretamente.'
-                );
+    const tipo =
+        campoTipo.value;
 
-                return;
-            }
+    const entrada =
+        Number(campoEntrada.value);
 
-            const novaTrade = {
-                id: Date.now(),
-                ativo,
-                tipo,
-                entrada:
-                    entrada.toFixed(2),
-                saida:
-                    saida.toFixed(2),
-                data:
-                    new Date().toLocaleString(
-                        'pt-BR'
-                    )
-            };
+    const saida =
+        Number(campoSaida.value);
 
-            historicoTrades.push(
-                novaTrade
+    if (
+        !ativo ||
+        !Number.isFinite(entrada) ||
+        !Number.isFinite(saida) ||
+        entrada <= 0 ||
+        saida <= 0
+    ) {
+        alert(
+            'Preencha o ativo e informe preços positivos.'
+        );
+
+        return;
+    }
+
+    botaoSalvar.disabled = true;
+    botaoSalvar.textContent =
+        'A salvar...';
+
+    try {
+        const resposta =
+            await fetch(
+                '/api/trades',
+                {
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type':
+                            'application/json'
+                    },
+
+                    body: JSON.stringify({
+                        ativo,
+                        tipo,
+                        entrada,
+                        saida
+                    })
+                }
             );
 
-            localStorage.setItem(
-                'astromoney_trades',
-                JSON.stringify(
-                    historicoTrades
-                )
+        const dados =
+            await resposta.json();
+
+        if (!resposta.ok) {
+            throw new Error(
+                dados.erro ||
+                'Não foi possível salvar a operação.'
             );
-
-            document.getElementById(
-                'trade-asset'
-            ).value = '';
-
-            document.getElementById(
-                'trade-entry'
-            ).value = '';
-
-            document.getElementById(
-                'trade-exit'
-            ).value = '';
-
-            renderizarTrades();
         }
+
+        campoAtivo.value = '';
+        campoEntrada.value = '';
+        campoSaida.value = '';
+
+        await carregarTrades();
+
+    } catch (erro) {
+        console.error(
+            'Erro ao salvar trade:',
+            erro
+        );
+
+        alert(
+            erro.message ||
+            'Não foi possível salvar a operação.'
+        );
+
+    } finally {
+        botaoSalvar.disabled = false;
+        botaoSalvar.textContent =
+            'Salvar Operação';
+    }
+}
+
+document
+    .getElementById('botao-salvar-trade')
+    .addEventListener(
+        'click',
+        adicionarTrade
+    );
 
 
         // ==========================================
         // APAGAR OPERAÇÃO
         // ==========================================
 
-        function apagarTrade(idDaTrade) {
+        async function apagarTrade(idDaTrade) {
+    const confirmou =
+        confirm(
+            'Deseja apagar este registo do seu diário?'
+        );
 
-            if (
-                !confirm(
-                    'Deseja apagar este registo do seu diário?'
-                )
-            ) {
-                return;
-            }
+    if (!confirmou) {
+        return;
+    }
 
-            historicoTrades =
-                historicoTrades.filter(
-                    trade =>
-                        trade.id !== idDaTrade
-                );
-
-            localStorage.setItem(
-                'astromoney_trades',
-                JSON.stringify(
-                    historicoTrades
-                )
+    try {
+        const resposta =
+            await fetch(
+                `/api/trades/${idDaTrade}`,
+                {
+                    method: 'DELETE'
+                }
             );
 
-            renderizarTrades();
+        const dados =
+            await resposta.json();
+
+        if (!resposta.ok) {
+            throw new Error(
+                dados.erro ||
+                'Não foi possível apagar a operação.'
+            );
         }
+
+        await carregarTrades();
+
+    } catch (erro) {
+        console.error(
+            'Erro ao apagar trade:',
+            erro
+        );
+
+        alert(
+            erro.message ||
+            'Não foi possível apagar a operação.'
+        );
+    }
+}
 
 
         // ==========================================
@@ -807,9 +964,7 @@
                 }
 
                 // Limpa apenas dados locais do diário.
-                localStorage.removeItem(
-                    'astromoney_trades'
-                );
+                localStorage.getItem('astromoney_trades')
 
                 alert(
                     'Conta apagada com sucesso.'

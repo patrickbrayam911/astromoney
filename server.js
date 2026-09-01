@@ -1671,6 +1671,239 @@ app.delete(
     }
 );
 
+// ======================================================
+// DIÁRIO DE TRADES - LISTAR
+// ======================================================
+
+app.get(
+    '/api/trades',
+    exigirLogin,
+    (req, res) => {
+        try {
+            const trades = db.prepare(`
+                SELECT
+                    id,
+                    asset AS ativo,
+                    order_type AS tipo,
+                    entry_price AS entrada,
+                    exit_price AS saida,
+                    created_at AS data
+
+                FROM trades
+
+                WHERE user_id = ?
+
+                ORDER BY
+                    created_at DESC,
+                    id DESC
+            `).all(req.user.id);
+
+            return res.json({
+                trades
+            });
+
+        } catch (erro) {
+            console.error(
+                'Erro ao listar trades:',
+                erro
+            );
+
+            return res.status(500).json({
+                erro:
+                    'Não foi possível carregar o diário de trades.'
+            });
+        }
+    }
+);
+
+
+// ======================================================
+// DIÁRIO DE TRADES - CRIAR
+// ======================================================
+
+app.post(
+    '/api/trades',
+    exigirLogin,
+    (req, res) => {
+        try {
+            const {
+                ativo: ativoRecebido,
+                tipo: tipoRecebido,
+                entrada: entradaRecebida,
+                saida: saidaRecebida
+            } = req.body;
+
+            if (
+                !ehString(ativoRecebido) ||
+                !ehString(tipoRecebido)
+            ) {
+                return res.status(400).json({
+                    erro:
+                        'Os dados da operação possuem formato inválido.'
+                });
+            }
+
+            const ativo =
+                ativoRecebido.trim().toUpperCase();
+
+            const tipo =
+                tipoRecebido.trim().toLowerCase();
+
+            const entrada =
+                Number(entradaRecebida);
+
+            const saida =
+                Number(saidaRecebida);
+
+            if (!ativo) {
+                return res.status(400).json({
+                    erro:
+                        'Informe o ativo da operação.'
+                });
+            }
+
+            if (ativo.length > 50) {
+                return res.status(400).json({
+                    erro:
+                        'O nome do ativo pode possuir no máximo 50 caracteres.'
+                });
+            }
+
+            const tiposPermitidos = [
+                'compra',
+                'venda'
+            ];
+
+            if (!tiposPermitidos.includes(tipo)) {
+                return res.status(400).json({
+                    erro:
+                        'O tipo da operação deve ser compra ou venda.'
+                });
+            }
+
+            if (
+                !Number.isFinite(entrada) ||
+                !Number.isFinite(saida) ||
+                entrada <= 0 ||
+                saida <= 0
+            ) {
+                return res.status(400).json({
+                    erro:
+                        'Os preços de entrada e saída devem ser números positivos.'
+                });
+            }
+
+            const resultado = db.prepare(`
+                INSERT INTO trades (
+                    user_id,
+                    asset,
+                    order_type,
+                    entry_price,
+                    exit_price
+                )
+                VALUES (?, ?, ?, ?, ?)
+            `).run(
+                req.user.id,
+                ativo,
+                tipo,
+                entrada,
+                saida
+            );
+
+            const trade = db.prepare(`
+                SELECT
+                    id,
+                    asset AS ativo,
+                    order_type AS tipo,
+                    entry_price AS entrada,
+                    exit_price AS saida,
+                    created_at AS data
+
+                FROM trades
+
+                WHERE id = ?
+                AND user_id = ?
+            `).get(
+                resultado.lastInsertRowid,
+                req.user.id
+            );
+
+            return res.status(201).json({
+                mensagem:
+                    'Operação adicionada ao diário.',
+
+                trade
+            });
+
+        } catch (erro) {
+            console.error(
+                'Erro ao criar trade:',
+                erro
+            );
+
+            return res.status(500).json({
+                erro:
+                    'Não foi possível salvar a operação.'
+            });
+        }
+    }
+);
+
+
+// ======================================================
+// DIÁRIO DE TRADES - APAGAR
+// ======================================================
+
+app.delete(
+    '/api/trades/:id',
+    exigirLogin,
+    (req, res) => {
+        try {
+            if (!idValido(req.params.id)) {
+                return res.status(400).json({
+                    erro:
+                        'Operação inválida.'
+                });
+            }
+
+            const tradeId =
+                Number(req.params.id);
+
+            const resultado = db.prepare(`
+                DELETE FROM trades
+
+                WHERE id = ?
+                AND user_id = ?
+            `).run(
+                tradeId,
+                req.user.id
+            );
+
+            if (resultado.changes === 0) {
+                return res.status(404).json({
+                    erro:
+                        'Operação não encontrada.'
+                });
+            }
+
+            return res.json({
+                mensagem:
+                    'Operação apagada do diário.'
+            });
+
+        } catch (erro) {
+            console.error(
+                'Erro ao apagar trade:',
+                erro
+            );
+
+            return res.status(500).json({
+                erro:
+                    'Não foi possível apagar a operação.'
+            });
+        }
+    }
+);
 
 // ======================================================
 // NOTÍCIAS - NEWSAPI
