@@ -2106,120 +2106,178 @@ const consultasNoticias = {
 // BUSCAR NOTÍCIAS
 // ======================================================
 
+const cacheNoticias = new Map();
+
+const DURACAO_CACHE_NOTICIAS =
+    5 * 60 * 1000;
+
+const TIMEOUT_NOTICIAS =
+    8 * 1000;
+
+
 app.get(
     '/api/noticias',
     exigirLogin,
     noticiasLimiter,
     async (req, res) => {
+        const categoria =
+            req.query.categoria === undefined
+                ? 'ultimas'
+                : req.query.categoria;
+
+        // Aceita somente categorias declaradas no objeto.
+        if (
+            !ehString(categoria) ||
+            !Object.hasOwn(
+                consultasNoticias,
+                categoria
+            )
+        ) {
+            return res.status(400).json({
+                erro:
+                    'Categoria de notícias inválida.'
+            });
+        }
+
+        const apiKey =
+            process.env.NEWS_API_KEY;
+
+        if (
+            !ehString(apiKey) ||
+            !apiKey.trim()
+        ) {
+            return res.status(503).json({
+                erro:
+                    'Serviço de notícias não configurado.'
+            });
+        }
+
+        // Consulta o cache antes de chamar a NewsAPI.
+        const cache =
+            cacheNoticias.get(categoria);
+
+        if (
+            cache &&
+            cache.expiraEm > Date.now()
+        ) {
+            res.setHeader(
+                'X-News-Cache',
+                'HIT'
+            );
+
+            return res.json({
+                categoria,
+                artigos: cache.artigos
+            });
+        }
+
+        // Não utiliza dados expirados silenciosamente.
+        cacheNoticias.delete(categoria);
+
+        const controlador =
+            new AbortController();
+
+        let tempoEsgotado = false;
+
+        const temporizador = setTimeout(() => {
+            tempoEsgotado = true;
+            controlador.abort();
+        }, TIMEOUT_NOTICIAS);
+
         try {
-            const categoriaRecebida =
-                req.query.categoria;
-
-
-            const categoria =
-                categoriaRecebida === undefined
-                    ? 'ultimas'
-                    : categoriaRecebida;
-
-
-            if (!ehString(categoria)) {
-                return res.status(400).json({
-                    erro:
-                        'Categoria de notícias inválida.'
-                });
-            }
-
-
-            const consulta =
-                consultasNoticias[categoria];
-
-
-            if (!consulta) {
-                return res.status(400).json({
-                    erro:
-                        'Categoria de notícias inválida.'
-                });
-            }
-
-
-            /**
-             * A chave é obtida exclusivamente
-             * através do ambiente do servidor.
-             *
-             * Ela nunca deve ficar no frontend.
-             */
-            const apiKey =
-                process.env.NEWS_API_KEY;
-
-
-            if (!apiKey) {
-                console.error(
-                    'NEWS_API_KEY não foi configurada no arquivo .env.'
-                );
-
-                return res.status(500).json({
-                    erro:
-                        'Serviço de notícias não configurado.'
-                });
-            }
-
-
             const parametros =
                 new URLSearchParams({
-                    q: consulta,
-                    language: 'pt',
-                    sortBy: 'publishedAt',
-                    pageSize: '30',
-                    apiKey
+                    q:
+                        consultasNoticias[categoria],
+
+                    language:
+                        'pt',
+
+                    sortBy:
+                        'publishedAt',
+
+                    pageSize:
+                        '30',
+
+                    apiKey:
+                        apiKey.trim()
                 });
 
-
-            const urlNewsAPI =
+            const url =
                 `https://newsapi.org/v2/everything?${parametros.toString()}`;
 
+            const resposta =
+                await fetch(url, {
+                    signal:
+                        controlador.signal
+                });
 
-            const respostaNewsAPI =
-                await fetch(urlNewsAPI);
-
-
-            if (!respostaNewsAPI.ok) {
+            if (!resposta.ok) {
+                // Registra somente o status, nunca a URL com a chave.
                 console.error(
-                    'Erro NewsAPI:',
-                    respostaNewsAPI.status
+                    'Falha na NewsAPI. Status:',
+                    resposta.status
                 );
 
                 return res.status(502).json({
                     erro:
-                        'Não foi possível consultar o serviço de notícias.'
+                        'O serviço de notícias está temporariamente indisponível.'
                 });
             }
 
-
             const dados =
-                await respostaNewsAPI.json();
+                await resposta.json();
 
+            if (
+                dados?.status !== 'ok' ||
+                !Array.isArray(dados.articles)
+            ) {
+                return res.status(502).json({
+                    erro:
+                        'O serviço de notícias retornou uma resposta inválida.'
+                });
+            }
 
             const artigos =
-                Array.isArray(dados.articles)
-                    ? dados.articles
-                    : [];
+                dados.articles;
 
+            // Guarda somente respostas bem-sucedidas.
+            cacheNoticias.set(
+                categoria,
+                {
+                    artigos,
+
+                    expiraEm:
+                        Date.now() +
+                        DURACAO_CACHE_NOTICIAS
+                }
+            );
+
+            res.setHeader(
+                'X-News-Cache',
+                'MISS'
+            );
 
             return res.json({
                 categoria,
                 artigos
             });
 
-        } catch (erro) {
-            console.error(
-                'Erro ao buscar notícias:',
-                erro
-            );
+        } catch {
+            if (tempoEsgotado) {
+                return res.status(504).json({
+                    erro:
+                        'O serviço de notícias demorou para responder. Tente novamente.'
+                });
+            }
 
-            return res.status(500).json({
+            return res.status(502).json({
                 erro:
-                    'Erro interno ao carregar notícias.'
+                    'Não foi possível consultar o serviço de notícias.'
             });
+
+        } finally {
+            clearTimeout(temporizador);
         }
     }
 );
