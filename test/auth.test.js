@@ -18,16 +18,11 @@ process.env.DATABASE_PATH = ':memory:';
 const app = require('../server');
 const db = require('../database');
 
-
-before(() => {
-    db.prepare(`
-        DELETE FROM sessions
-    `).run();
-
-    db.prepare(`
-        DELETE FROM users
-    `).run();
-});
+assert.equal(
+    db.name,
+    ':memory:',
+    'TESTE INTERROMPIDO: o banco precisa estar em memória.'
+);
 
 
 after(() => {
