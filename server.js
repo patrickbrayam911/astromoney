@@ -12,10 +12,30 @@ const {
     generateSessionId
 } = require('./auth');
 
+const helmet = require('helmet');
+
+const {
+    rateLimit
+} = require('express-rate-limit');
+
+
 const app = express();
 
-const PORT = process.env.PORT || 3000;
+app.disable('x-powered-by');
 
+app.use(
+    helmet({
+        /*
+         * A CSP será ativada posteriormente.
+         * Por enquanto, o projeto ainda utiliza scripts
+         * e estilos inline, além do TradingView externo.
+         */
+        contentSecurityPolicy: false
+    })
+);
+
+
+const PORT = process.env.PORT || 3000;
 
 // ======================================================
 // MIDDLEWARES
@@ -231,6 +251,88 @@ function obterUsuarioDaSessao(req) {
     };
 }
 
+// ======================================================
+// LIMITAÇÃO DE REQUISIÇÕES
+// ======================================================
+
+const loginLimiter = rateLimit({
+    windowMs:
+        15 * 60 * 1000,
+
+    limit: 10,
+
+    standardHeaders:
+        'draft-8',
+
+    legacyHeaders:
+        false,
+
+    skipSuccessfulRequests:
+        true,
+
+    message: {
+        erro:
+            'Muitas tentativas de login. Aguarde 15 minutos e tente novamente.'
+    }
+});
+
+
+const cadastroLimiter = rateLimit({
+    windowMs:
+        60 * 60 * 1000,
+
+    limit: 5,
+
+    standardHeaders:
+        'draft-8',
+
+    legacyHeaders:
+        false,
+
+    message: {
+        erro:
+            'Muitas tentativas de cadastro. Tente novamente mais tarde.'
+    }
+});
+
+
+const senhaLimiter = rateLimit({
+    windowMs:
+        15 * 60 * 1000,
+
+    limit: 5,
+
+    standardHeaders:
+        'draft-8',
+
+    legacyHeaders:
+        false,
+
+    message: {
+        erro:
+            'Muitas tentativas de alteração de senha. Aguarde alguns minutos.'
+    }
+});
+
+
+const noticiasLimiter = rateLimit({
+    windowMs:
+        5 * 60 * 1000,
+
+    limit: 30,
+
+    standardHeaders:
+        'draft-8',
+
+    legacyHeaders:
+        false,
+
+    message: {
+        erro:
+            'Muitas consultas de notícias. Aguarde alguns minutos.'
+    }
+});
+
 
 // ======================================================
 // MIDDLEWARE DE AUTENTICAÇÃO
@@ -259,8 +361,11 @@ function exigirLogin(req, res, next) {
 // REGISTRO
 // ======================================================
 
-app.post('/api/auth/register', async (req, res) => {
-    try {
+app.post(
+    '/api/auth/register',
+    cadastroLimiter,
+    async (req, res) => {
+        try {
         let {
             nome,
             telefone,
@@ -307,7 +412,8 @@ app.post('/api/auth/register', async (req, res) => {
             return res.status(400).json({
                 erro:
                     'Os dados enviados possuem formato inválido.'
-            });
+            }
+          );
         }
 
 
@@ -497,7 +603,10 @@ app.post('/api/auth/register', async (req, res) => {
 // LOGIN
 // ======================================================
 
-app.post('/api/auth/login', async (req, res) => {
+app.post(
+    '/api/auth/login',
+    loginLimiter,
+    async (req, res) => {
     try {
         let {
             email,
@@ -719,6 +828,7 @@ app.get(
 app.put(
     '/api/users/password',
     exigirLogin,
+    senhaLimiter,
     async (req, res) => {
         try {
             const {
@@ -1944,6 +2054,7 @@ const consultasNoticias = {
 app.get(
     '/api/noticias',
     exigirLogin,
+    noticiasLimiter,
     async (req, res) => {
         try {
             const categoriaRecebida =
