@@ -314,6 +314,24 @@ const senhaLimiter = rateLimit({
     }
 });
 
+const exclusaoContaLimiter = rateLimit({
+    windowMs:
+        15 * 60 * 1000,
+
+    limit: 5,
+
+    standardHeaders:
+        'draft-8',
+
+    legacyHeaders:
+        false,
+
+    message: {
+        erro:
+            'Muitas tentativas de exclusão. Aguarde alguns minutos.'
+    }
+});
+
 
 const noticiasLimiter = rateLimit({
     windowMs:
@@ -991,18 +1009,57 @@ app.put(
 app.delete(
     '/api/users/profile',
     exigirLogin,
-    (req, res) => {
+    exclusaoContaLimiter,
+    async (req, res) => {
         try {
-            const userId =
-                req.user.id;
+            const senha =
+                req.body.senha;
 
+            if (
+                !ehString(senha) ||
+                !senha ||
+                senha.length > 128
+            ) {
+                return res.status(400).json({
+                    erro:
+                        'Informe a senha atual.'
+                });
+            }
 
-            const resultado =
-                db.prepare(`
-                    DELETE FROM users
-                    WHERE id = ?
-                `).run(userId);
+            const usuario = db.prepare(`
+                SELECT
+                    id,
+                    password_hash
 
+                FROM users
+
+                WHERE id = ?
+            `).get(req.user.id);
+
+            if (!usuario) {
+                return res.status(404).json({
+                    erro:
+                        'Usuário não encontrado.'
+                });
+            }
+
+            const senhaCorreta =
+                await verifyPassword(
+                    senha,
+                    usuario.password_hash
+                );
+
+            if (!senhaCorreta) {
+                return res.status(401).json({
+                    erro:
+                        'Senha incorreta.'
+                });
+            }
+
+            const resultado = db.prepare(`
+                DELETE FROM users
+                WHERE id = ?
+            `).run(usuario.id);
 
             if (resultado.changes === 0) {
                 return res.status(404).json({
@@ -1010,7 +1067,6 @@ app.delete(
                         'Usuário não encontrado.'
                 });
             }
-
 
             res.clearCookie(
                 SESSION_COOKIE,
@@ -1023,7 +1079,6 @@ app.delete(
                         'production'
                 }
             );
-
 
             return res.json({
                 mensagem:
@@ -2192,8 +2247,12 @@ app.use('/api', (req, res) => {
 // INICIAR SERVIDOR
 // ======================================================
 
-app.listen(PORT, () => {
-    console.log(
-        `ASTROMONEY rodando em http://localhost:${PORT}`
-    );
-});
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(
+            `ASTROMONEY rodando em http://localhost:${PORT}`
+        );
+    });
+}
+
+module.exports = app;
